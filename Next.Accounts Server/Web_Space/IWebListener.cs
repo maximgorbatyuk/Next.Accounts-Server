@@ -7,6 +7,6 @@ namespace Next.Accounts_Server.Web_Space
     {
         void OnRequestReceived(HttpListenerRequest request);
 
-        void OnWebError(Exception ex);
+        void OnWebError(Exception ex); 
     }
 }
