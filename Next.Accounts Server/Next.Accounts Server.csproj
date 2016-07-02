@@ -41,6 +41,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -63,11 +64,13 @@
     <Compile Include="Database_Namespace\IDatabase.cs" />
     <Compile Include="Database_Namespace\IDatabaseListener.cs" />
     <Compile Include="Models\Account.cs" />
+    <Compile Include="Web_Space\JsonParser.cs" />
     <Compile Include="Web_Space\Model\ApiRequest.cs" />
     <Compile Include="Web_Space\Model\ApiResponse.cs" />
     <Compile Include="Models\Computer.cs" />
     <Compile Include="Web_Space\IJsonParser.cs" />
     <Compile Include="Web_Space\IWebListener.cs" />
+    <Compile Include="Web_Space\WebServer.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -113,6 +116,14 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
