@@ -53,31 +53,37 @@ namespace Next.Accounts_Server
                 //есть данные от клиента?
                 if (!request.HasEntityBody) return;
 
-                //смотрим, что пришло
-                using (Stream body = request.InputStream)
+                try
                 {
-                    using (StreamReader reader = new StreamReader(body))
+                    using (Stream body = request.InputStream)
                     {
-                        string text = await reader.ReadToEndAsync();
-                        text = HttpUtility.UrlDecode(text, Encoding.UTF8);
-
-                        var dic = new Dictionary<string, string>();
-
-                        if (text != null)
+                        using (StreamReader reader = new StreamReader(body))
                         {
-                            var array = text.Split('&');
-                            foreach (var item in array)
+                            string text = await reader.ReadToEndAsync();
+                            text = HttpUtility.UrlDecode(text, Encoding.UTF8);
+
+                            var dic = new Dictionary<string, string>();
+
+                            if (text != null)
                             {
-                                var pair = item.Split('=');
-                                dic.Add(pair[0], pair[1]);
+                                var array = text.Split('&');
+                                foreach (var item in array)
+                                {
+                                    var pair = item.Split('=');
+                                    dic.Add(pair[0], pair[1]);
+                                }
                             }
-                        }
                         
 
-                        DisplayText(text);
-                        //выводим имя
-                        // MessageBox.Show(text);
+                            DisplayText(text);
+                            //выводим имя
+                            // MessageBox.Show(text);
+                        }
                     }
+                }
+                catch (Exception e)
+                {
+                    OnWebError(e);
                 }
             }
             
@@ -90,12 +96,26 @@ namespace Next.Accounts_Server
 
         public void OnWebError(Exception ex)
         {
-            
+            DisplayText($"Error: {ex.Message}");
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _server.Close();
+        }
+
+        private void StartListenButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_server.GetListenState())
+            {
+                StartListenButton.Header = "Start listenning";
+                _server.Close();
+            }
+            else
+            {
+                StartListenButton.Header = "Stop listenning";
+                _server.Start();
+            }
         }
     }
 }

@@ -24,30 +24,17 @@ namespace Next.Accounts_Server.Web_Space
             _server.Prefixes.Add(url);
             _threadCount = count;
             _url = url;
-
-            _threads = new List<Thread>();
-            for (var i = 0; i < _threadCount; i++)
-            {
-                var thread = new Thread(StartListen);
-                thread.Start();
-                _threads.Add(thread);
-            }
-            
         }
 
+        public bool GetListenState() => _server?.IsListening ?? false;
 
-        public void Close()
+        public void Start()
         {
-            _server.Stop();
-            foreach (var thread in _threads)
+            if (_server.IsListening)
             {
-                thread.Abort();
+                Close();
             }
-        }
 
-        public void StartListen()
-        {
-            
             try
             {
                 _server.Start();
@@ -59,11 +46,37 @@ namespace Next.Accounts_Server.Web_Space
                     var username = Environment.GetEnvironmentVariable("USERNAME");
                     var userdomain = Environment.GetEnvironmentVariable("USERDOMAIN");
                     // netsh http add urlacl url=http://*:9669/ user=fak listen=yes
-                    _listener.OnWebSystemMessage($"netsh http add urlacl url={_url} user={userdomain}\\{username} listen=yes");
-                    return;
+                    _listener.OnWebSystemMessage(
+                        $"netsh http add urlacl url={_url} user={userdomain}\\{username} listen=yes");
                 }
+                _listener.OnWebError(ex);
+                return;
             }
 
+
+            _threads = new List<Thread>();
+            for (var i = 0; i < _threadCount; i++)
+            {
+                var thread = new Thread(Listenning);
+                _threads.Add(thread);
+                thread.Start();
+            }
+            _listener.OnWebSystemMessage("Listenning started");
+        }
+
+        public void Close()
+        {
+            _server.Stop();
+            if (_threads == null) return;
+            foreach (var thread in _threads)
+            {
+                thread.Abort();
+            }
+            _listener.OnWebSystemMessage("Listenning stopped");
+        }
+
+        public void Listenning()
+        {
             while (_server.IsListening)
             {
                 try
@@ -97,7 +110,7 @@ namespace Next.Accounts_Server.Web_Space
                 }
                 catch (Exception ex)
                 {
-                    // ignored
+                    _listener.OnWebError(ex);
                 }
             }
         }
