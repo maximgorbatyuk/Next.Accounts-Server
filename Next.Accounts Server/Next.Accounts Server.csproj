@@ -62,20 +62,21 @@
     </ApplicationDefinition>
     <Compile Include="Application_Space\Const.cs" />
     <Compile Include="Application_Space\IEventListener.cs" />
+    <Compile Include="Extensions\CollectionExtensions.cs" />
     <Compile Include="Extensions\JsonExtensions.cs" />
     <Compile Include="Database_Namespace\IDatabase.cs" />
     <Compile Include="Database_Namespace\IDatabaseListener.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TcpExtensions.cs" />
     <Compile Include="Models\Account.cs" />
-    <Compile Include="Web_Space\HttpClientResponder.cs" />
+    <Compile Include="Models\Request.cs" />
+    <Compile Include="Models\Response.cs" />
+    <Compile Include="Web_Space\HttpClientProcessor.cs" />
     <Compile Include="Web_Space\ITcpListener.cs" />
-    <Compile Include="Web_Space\JsonParser.cs" />
     <Compile Include="Web_Space\Model\ApiRequest.cs" />
     <Compile Include="Web_Space\Model\ApiResponse.cs" />
     <Compile Include="Models\Computer.cs" />
-    <Compile Include="Web_Space\IJsonParser.cs" />
-    <Compile Include="Web_Space\IHttpListener.cs" />
+    <Compile Include="Web_Space\IHttpProcessor.cs" />
     <Compile Include="Web_Space\HttpServer.cs" />
     <Compile Include="Web_Space\TcpClientResponder.cs" />
     <Compile Include="Web_Space\TcpServer.cs" />

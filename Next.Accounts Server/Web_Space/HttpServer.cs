@@ -13,18 +13,18 @@ namespace Next.Accounts_Server.Web_Space
 {
     public class HttpServer
     {
-        private readonly IHttpListener _listener;
+        private readonly IHttpProcessor _processor;
         private readonly IEventListener _eventListener;
         private readonly string _url;
-        private readonly System.Net.HttpListener _server;
+        private readonly HttpListener _server;
         private readonly int _threadCount;
         private List<Thread> _threads;
 
-        public HttpServer(IHttpListener listener, IEventListener eventListener, string url = "http://*:8080/", int count = 5)
+        public HttpServer(IHttpProcessor processor, IEventListener eventListener, string url = "http://*:8080/", int count = 5)
         {
-            _listener = listener;
+            _processor = processor;
             _eventListener = eventListener;
-            _server = new System.Net.HttpListener();
+            _server = new HttpListener();
             _server.Prefixes.Add(url);
             _threadCount = count;
             _url = url;
@@ -86,7 +86,7 @@ namespace Next.Accounts_Server.Web_Space
                 try
                 {
                     HttpListenerContext context = _server.GetContext();
-                    _listener.OnRequestReceived(context);
+                    _processor.OnRequestReceived(context);
                 }
                 catch (Exception ex)
                 {

@@ -4,7 +4,7 @@ namespace Next.Accounts_Server.Models
 {
     public class Account
     {
-        public int Id { get; set; } = -1;
+        public int Id { get; set; }
 
         public string Login { get; set; } = null;
 

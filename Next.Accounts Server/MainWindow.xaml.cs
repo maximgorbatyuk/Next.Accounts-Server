@@ -27,13 +27,13 @@ namespace Next.Accounts_Server
     {
 
         private HttpServer _server;
-        private TcpServer _tcpServer;
+        ///private TcpServer _tcpServer;
 
         public MainWindow()
         {
             InitializeComponent();
-            var httpResponder = new HttpClientResponder(this);
-            _server = new HttpServer(httpResponder, this);
+            var clientProcessor = new HttpClientProcessor(this);
+            _server = new HttpServer(clientProcessor, this);
 
             //var tcpResponder = new TcpClientResponder(this);
             //_tcpServer = new TcpServer(tcpResponder, this);
@@ -48,7 +48,7 @@ namespace Next.Accounts_Server
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _server?.Close();
-            _tcpServer?.Stop();
+            //_tcpServer?.Stop();
         }
 
         private void StartListenButton_OnClick(object sender, RoutedEventArgs e)
