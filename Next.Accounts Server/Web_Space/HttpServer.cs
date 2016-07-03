@@ -6,21 +6,25 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Next.Accounts_Server.Application_Space;
+using Next.Accounts_Server.Extensions;
 
 namespace Next.Accounts_Server.Web_Space
 {
-    public class WebServer
+    public class HttpServer
     {
-        private readonly IWebListener _listener;
+        private readonly IHttpListener _listener;
+        private readonly IEventListener _eventListener;
         private readonly string _url;
-        private readonly HttpListener _server;
+        private readonly System.Net.HttpListener _server;
         private readonly int _threadCount;
         private List<Thread> _threads;
 
-        public WebServer(IWebListener listener, string url = "http://*:8080/", int count = 5)
+        public HttpServer(IHttpListener listener, IEventListener eventListener, string url = "http://*:8080/", int count = 5)
         {
             _listener = listener;
-            _server = new HttpListener();
+            _eventListener = eventListener;
+            _server = new System.Net.HttpListener();
             _server.Prefixes.Add(url);
             _threadCount = count;
             _url = url;
@@ -46,10 +50,10 @@ namespace Next.Accounts_Server.Web_Space
                     var username = Environment.GetEnvironmentVariable("USERNAME");
                     var userdomain = Environment.GetEnvironmentVariable("USERDOMAIN");
                     // netsh http add urlacl url=http://*:9669/ user=fak listen=yes
-                    _listener.OnWebSystemMessage(
+                    _eventListener.OnMessage(
                         $"netsh http add urlacl url={_url} user={userdomain}\\{username} listen=yes");
                 }
-                _listener.OnWebError(ex);
+                _eventListener.OnException(ex);
                 return;
             }
 
@@ -61,7 +65,7 @@ namespace Next.Accounts_Server.Web_Space
                 _threads.Add(thread);
                 thread.Start();
             }
-            _listener.OnWebSystemMessage("Listenning started");
+            _eventListener.OnMessage("Listenning started");
         }
 
         public void Close()
@@ -72,7 +76,7 @@ namespace Next.Accounts_Server.Web_Space
             {
                 thread.Abort();
             }
-            _listener.OnWebSystemMessage("Listenning stopped");
+            _eventListener.OnMessage("Listenning stopped");
         }
 
         public void Listenning()
@@ -82,35 +86,11 @@ namespace Next.Accounts_Server.Web_Space
                 try
                 {
                     HttpListenerContext context = _server.GetContext();
-
-                    //получаем входящий запрос
-                    HttpListenerRequest request = context.Request;
-                    _listener.OnRequestReceived(request);
-                    
-
-                    var responseDic = new Dictionary<string, string>
-                    {
-                        {"response", context.Response.StatusCode.ToString() },
-                        {"raw_url", request.RawUrl },
-                        {"method", request.HttpMethod },
-                        {"user_agent", request.UserAgent }
-                    };
-
-                    var jsonParser = new JsonParser();
-
-                    HttpListenerResponse response = context.Response;
-                    response.ContentType = "text/plain; charset=UTF-8";
-                    byte[] buffer = Encoding.UTF8.GetBytes(jsonParser.ToJson(responseDic));
-                    response.ContentLength64 = buffer.Length;
-
-                    using (Stream output = response.OutputStream)
-                    {
-                        output.Write(buffer, 0, buffer.Length);
-                    }
+                    _listener.OnRequestReceived(context);
                 }
                 catch (Exception ex)
                 {
-                    _listener.OnWebError(ex);
+                    _eventListener.OnException(ex);
                 }
             }
         }

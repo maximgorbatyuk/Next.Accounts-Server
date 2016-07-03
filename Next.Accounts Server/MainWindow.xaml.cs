@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Web_Space;
 
 namespace Next.Accounts_Server
@@ -22,15 +23,20 @@ namespace Next.Accounts_Server
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IWebListener
+    public partial class MainWindow : Window, IEventListener
     {
 
-        private WebServer _server;
+        private HttpServer _server;
+        private TcpServer _tcpServer;
 
         public MainWindow()
         {
             InitializeComponent();
-            _server = new WebServer(this);
+            var httpResponder = new HttpClientResponder(this);
+            _server = new HttpServer(httpResponder, this);
+
+            //var tcpResponder = new TcpClientResponder(this);
+            //_tcpServer = new TcpServer(tcpResponder, this);
         }
 
         private void DisplayText(string text)
@@ -39,69 +45,10 @@ namespace Next.Accounts_Server
         }
 
 
-        public async void OnRequestReceived(HttpListenerRequest request)
-        {
-
-            if (request.HttpMethod == "GET")
-            {
-                var parameters = request.QueryString;
-                DisplayText(parameters.ToString());
-            }
-
-            if (request.HttpMethod == "POST")
-            {
-                //есть данные от клиента?
-                if (!request.HasEntityBody) return;
-
-                try
-                {
-                    using (Stream body = request.InputStream)
-                    {
-                        using (StreamReader reader = new StreamReader(body))
-                        {
-                            string text = await reader.ReadToEndAsync();
-                            text = HttpUtility.UrlDecode(text, Encoding.UTF8);
-
-                            var dic = new Dictionary<string, string>();
-
-                            if (text != null)
-                            {
-                                var array = text.Split('&');
-                                foreach (var item in array)
-                                {
-                                    var pair = item.Split('=');
-                                    dic.Add(pair[0], pair[1]);
-                                }
-                            }
-                        
-
-                            DisplayText(text);
-                            //выводим имя
-                            // MessageBox.Show(text);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    OnWebError(e);
-                }
-            }
-            
-        }
-
-        public void OnWebSystemMessage(string text)
-        {
-            DisplayText(text);
-        }
-
-        public void OnWebError(Exception ex)
-        {
-            DisplayText($"Error: {ex.Message}");
-        }
-
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _server.Close();
+            _server?.Close();
+            _tcpServer?.Stop();
         }
 
         private void StartListenButton_OnClick(object sender, RoutedEventArgs e)
@@ -110,12 +57,25 @@ namespace Next.Accounts_Server
             {
                 StartListenButton.Header = "Start listenning";
                 _server.Close();
+                //_tcpServer.Stop();
             }
             else
             {
                 StartListenButton.Header = "Stop listenning";
                 _server.Start();
+               // _tcpServer.Start();
             }
+        }
+
+        public void OnException(Exception ex)
+        {
+            var text = $"Exception catched:\nStack: {ex.StackTrace}\nMessage: {ex.Message}";
+            DisplayText(text);
+        }
+
+        public void OnMessage(string message)
+        {
+            DisplayText(message);
         }
     }
 }
