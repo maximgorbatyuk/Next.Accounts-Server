@@ -14,11 +14,9 @@ namespace Next.Accounts_Server.Models
 
         public string ComputerName { get; set; } = null;
 
-        public Account(int id, string login, string pass)
+        public override string ToString()
         {
-            Id = id;
-            Login = login;
-            Password = pass;
+            return $"Id={Id}, Login={Login}, Available={Available}";
         }
     }
 }

@@ -16,6 +16,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Next.Accounts_Server.Application_Space;
+using Next.Accounts_Server.Database_Namespace;
+using Next.Accounts_Server.Models;
 using Next.Accounts_Server.Web_Space;
 
 namespace Next.Accounts_Server
@@ -35,6 +37,7 @@ namespace Next.Accounts_Server
             var clientProcessor = new HttpClientProcessor(this);
             _server = new HttpServer(clientProcessor, this);
 
+            TestDatabase();
             //var tcpResponder = new TcpClientResponder(this);
             //_tcpServer = new TcpServer(tcpResponder, this);
         }
@@ -76,6 +79,32 @@ namespace Next.Accounts_Server
         public void OnMessage(string message)
         {
             DisplayText(message);
+        }
+
+        public void UpdateAccountCount(int count, int available)
+        {
+            throw new NotImplementedException();
+        }
+
+        private async void TestDatabase()
+        {
+            var account = new Account
+            {
+                Id = 1488,
+                Login = "Maxim",
+                Password = "pass",
+                Available = true,
+                ComputerName = ""
+            };
+            var db = new LiteDatabase(this);
+            DisplayText($" Добавлено аккаунтов: {await db.AddAccountAsync(account)}");
+
+            var freeAcc = await db.GetAccount(null, true);
+            DisplayText(freeAcc != null ? $"Взят аккаунт {freeAcc}" : "Таблица акков пуста");
+
+            var releaseResult = await db.ReleaseAccount(freeAcc);
+            DisplayText($"Результат возврата аккаунта: {releaseResult}, аккаунт {freeAcc}");
+
         }
     }
 }

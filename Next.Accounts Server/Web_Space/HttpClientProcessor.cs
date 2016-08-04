@@ -30,15 +30,15 @@ namespace Next.Accounts_Server.Web_Space
                 RawUrl = context.Request.RawUrl
             };
 
-            ReturnWebError(context, "Fuck you");
-            return;
+            //ReturnWebError(context, "Fuck you");
+            //return;
 
             if (request.HttpMethod == "POST")
             {
                 request.PostData = new StreamReader(request.InputStream).ReadToEnd();
             }
 
-            var account = new Account(1488, "maxim", "password");
+            var account = new Account { Id = 1488, Login = "maxim", Password = "password" };
 
             var response = new Response
             {

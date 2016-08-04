@@ -9,5 +9,12 @@ namespace Next.Accounts_Server.Extensions
         {
             return Encoding.ASCII.GetBytes(text);
         }
+
+        public static int ToInt(this bool value)
+        {
+            var result = 0;
+            if (value) result = 1;
+            return result;
+        }
     }
 }

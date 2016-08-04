@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Documents;
 using Next.Accounts_Server.Models;
 
@@ -6,24 +7,21 @@ namespace Next.Accounts_Server.Database_Namespace
 {
     public interface IDatabase
     {
-        Account GetAccount(Computer holder);
+        Task<Account> GetAccount(Computer computer, bool free = false);
 
-        void ReleaseAccount(Account account);
+        Task<int> ReleaseAccount(Account account);
 
-        Computer GetCopmuter();
+        //void UpdateComputer(Computer computer);
 
-        void UpdateComputer(Computer computer);
+        Task<int> UpdateAccountAsync(Account account);
 
-        int GetCountOfAccounts(bool free = false);
+        Task<List<Account>> GetListOfAccountsAsync(bool free = false);
 
-        bool AddAccounts(IList<Account> source);
+        Task<int> AddAccountsAsync(IList<Account> source);
 
-        bool AddAccount(Account account);
+        Task<int> AddAccountAsync(Account account);
 
-        bool RemoveAccount(Account account);
+        Task<int> RemoveAccountAsync(Account account);
 
-        bool LogAccountRequire(Account account);
-
-        bool LogAccountRelease(Account account);
     }
 }
