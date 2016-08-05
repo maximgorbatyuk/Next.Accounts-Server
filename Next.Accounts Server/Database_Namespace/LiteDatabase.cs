@@ -129,15 +129,18 @@ namespace Next.Accounts_Server.Database_Namespace
         {
             Account account = null;
             var accounts = await GetListOfAccountsAsync(free);
-            if (accounts.Count == 0) return account;
-            var freeCount = accounts.Where(a => a.Available = true).ToList();
+            if (accounts.Count == 0) return null;
+
+            account = accounts.FirstOrDefault(a => a.Available == true);
+            if (account == null) return null;
+            account.Available = false;
+            account.ComputerName = computer != null ? computer.Name : NoComputer;
+
+            var freeCount = accounts.Where(a => a.Available == true).ToList();
             var allCount = accounts.Count;
             _eventListener.UpdateAccountCount(allCount, freeCount.Count);
 
-            account = free ? accounts.First(a => a.Available = true) : accounts.First();
-            account.Available = false;
-            account.ComputerName = computer != null ? computer.Name : NoComputer;
-            await UpdateAccountAsync(account);
+            var count = await UpdateAccountAsync(account);
             return account;
         }
 

@@ -2,14 +2,12 @@
 {
     public class ApiMessage
     {
-        public int Code { get; set; }
+        public int Code { get; set; } = 200;
 
-        public string Type { get; set; }
+        public string RequestType { get; set; } = null;
 
-        public string RequestType { get; set; }
+        public string JsonObject { get; set; } = null;
 
-        public string JsonObject { get; set; }
-
-        public string SenderDescription { get; set; }
+        public string StringMessage { get; set; } = null;
     }
 }

@@ -39,7 +39,7 @@ namespace Next.Accounts_Server
             var clientProcessor = new HttpClientResponder(this, _database);
             _server = new HttpServer(clientProcessor, this);
 
-            TestDatabase();
+            //TestDatabase();
             //var tcpResponder = new TcpClientResponder(this);
             //_tcpServer = new TcpServer(tcpResponder, this);
         }

@@ -52,32 +52,55 @@ namespace Next.Accounts_Server.Web_Space
             CloseHttpContext(context, response);
         }
 
+        public void ReturnWebError(HttpListenerContext context, string message, int code = 404)
+        {
+            var api = new ApiMessage
+            {
+                Code = 404,
+                JsonObject = message,
+                RequestType = "Error",
+                StringMessage = message
+            };
+            CloseHttpContext(context, api, HttpStatusCode.NotFound);
+        }
+
         private async Task<ApiMessage> CreateHttpResponseAsync(ApiRequests type, HttpRequest request)
         {
             var apiRequest = request.PostData.ParseJson<ApiMessage>();
             var response = new ApiMessage
             {
                 Code = 200,
-                Type = null,
                 JsonObject = null,
                 RequestType = null,
-                SenderDescription = request.HttpMethod == "POST" ? request.PostData : request.RawUrl
+                StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl
             };
             switch (type)
             {
                 case ApiRequests.GetAccount:
                     var copmuter = apiRequest.JsonObject.ParseJson<Computer>();
                     var accountToSend = await _database.GetAccount(copmuter);
-                    response.JsonObject = accountToSend.ToJson();
-                    response.Code = 200;
+                    response.JsonObject = accountToSend != null ? accountToSend.ToJson() : null;
+                    response.Code = accountToSend != null ? 200 : 404;
                     response.RequestType = "GetAccount";
+                    response.StringMessage = accountToSend != null ? "" : "No accounts available";
                     break;
                 case ApiRequests.ReleaseAccount:
-                    var releaseAccount = apiRequest.JsonObject.ParseJson<Account>();
-                    int result = await _database.ReleaseAccount(releaseAccount);
-                    response.JsonObject = null;
-                    response.Code = 200;
-                    response.RequestType = "ReleaseAccount";
+                    if (apiRequest.JsonObject != "null")
+                    {
+                        var releaseAccount = apiRequest.JsonObject.ParseJson<Account>();
+                        int result = await _database.ReleaseAccount(releaseAccount);
+                        response.JsonObject = null;
+                        response.Code = 200;
+                        response.RequestType = "ReleaseAccount";
+                        response.StringMessage = "Account has been released";
+                    }
+                    else
+                    {
+                        response.Code = 404;
+                        response.RequestType = "ReleaseAccount";
+                        response.StringMessage = "Account has not been released because of null data";
+                    }
+                    
                     break;
                 default:
                     response.Code = 404;
@@ -94,15 +117,16 @@ namespace Next.Accounts_Server.Web_Space
             var buffer = response.ToJson().ToBuffer();
             context.Response.ContentLength64 = buffer.Length;
             context.Response.StatusCode = (int) code;
-            _eventListener.OnMessage($"Processed client: {context.Request.LocalEndPoint?.Address}");
+            _eventListener.OnMessage($"Processed client: " +
+                                     $"{context.Request.LocalEndPoint?.Address}:{context.Request.LocalEndPoint?.Port}");
             context.Response.Close(buffer, false);
         }
 
         private ApiRequests GetRequestType(ApiMessage api)
         {
             var result = ApiRequests.None;
-            if (api.Type == null) return result;
-            switch (api.Type)
+            if (api.RequestType == null) return result;
+            switch (api.RequestType)
             {
                 case "GetAccount":
                     result = ApiRequests.GetAccount;
