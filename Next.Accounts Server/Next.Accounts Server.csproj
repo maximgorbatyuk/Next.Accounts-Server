@@ -85,6 +85,7 @@
     </ApplicationDefinition>
     <Compile Include="Application_Space\Const.cs" />
     <Compile Include="Application_Space\IEventListener.cs" />
+    <Compile Include="Controllers\DefaultLogger.cs" />
     <Compile Include="Controllers\ILogger.cs" />
     <Compile Include="Database_Namespace\LiteDatabase.cs" />
     <Compile Include="Extensions\CollectionExtensions.cs" />
