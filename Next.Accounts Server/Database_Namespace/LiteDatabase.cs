@@ -60,7 +60,8 @@ namespace Next.Accounts_Server.Database_Namespace
                         $"{LoginColumn} TEXT," +
                         $"{PasswordColumn} TEXT," +
                         $"{AvailableColumn} INTEGER," +
-                        $"{ComputerNameColumn} TEXT)";
+                        $"{ComputerNameColumn} TEXT, " +
+                        $"{CenterOwnerColumn} TEXT)";
             var result = await ExecuteNonQueryAsync(query);
             Debug.WriteIf(result > 0, "Инициирована база аккаунтов");
         }
@@ -129,6 +130,10 @@ namespace Next.Accounts_Server.Database_Namespace
             Account account = null;
             var accounts = await GetListOfAccountsAsync(free);
             if (accounts.Count == 0) return account;
+            var freeCount = accounts.Where(a => a.Available = true).ToList();
+            var allCount = accounts.Count;
+            _eventListener.UpdateAccountCount(allCount, freeCount.Count);
+
             account = free ? accounts.First(a => a.Available = true) : accounts.First();
             account.Available = false;
             account.ComputerName = computer != null ? computer.Name : NoComputer;
@@ -210,6 +215,11 @@ namespace Next.Accounts_Server.Database_Namespace
             var query = $"delete from {_accountTableName} where {IdColumn}={account.Id}";
             var result = await ExecuteNonQueryAsync(query);
             return result;
+        }
+
+        public Task<int> RestoreAccounts(IList<Account> source)
+        {
+            throw new NotImplementedException();
         }
     }
 }

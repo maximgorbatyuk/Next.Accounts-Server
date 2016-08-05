@@ -1,10 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace Next.Accounts_Server.Extensions
 {
     public static class JsonExtensions
     {
-        public static T Parse<T>(this string source)
+        public static T ParseJson<T>(this string source)
         {
             try
             {

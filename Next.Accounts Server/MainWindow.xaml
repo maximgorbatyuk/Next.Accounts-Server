@@ -20,7 +20,8 @@
         </Menu>
         <TextBox x:Name="LogTextBox" Margin="10" TextWrapping="Wrap" Grid.Row="1"/>
         <StatusBar Grid.Row="2" Margin="0,3,0,0">
-            <Label x:Name="label" Content="Label" Width="157"/>
+            <Label x:Name="AddressLabel" Content="here is addresses" Width="157"/>
+            <Label x:Name="CountLabel" Content="Here is count of accounts" Width="212"/>
         </StatusBar>
 
     </Grid>

@@ -14,9 +14,11 @@ namespace Next.Accounts_Server.Models
 
         public string ComputerName { get; set; } = null;
 
+        public string CenterOwner { get; set; } = "Unknown";
+
         public override string ToString()
         {
-            return $"Id={Id}, Login={Login}, Available={Available}";
+            return $"Id={Id}, Login={Login}, Available={Available}, Owner={CenterOwner}";
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Extensions;
+using Next.Accounts_Server.Web_Space.Interfaces;
 
 namespace Next.Accounts_Server.Web_Space
 {
@@ -16,16 +17,17 @@ namespace Next.Accounts_Server.Web_Space
         private readonly IHttpProcessor _processor;
         private readonly IEventListener _eventListener;
         private readonly string _url;
-        private readonly HttpListener _server;
+        private HttpListener _server;
         private readonly int _threadCount;
         private List<Thread> _threads;
+        private string _prefix;
+        private bool _activeStatement = false;
 
-        public HttpServer(IHttpProcessor processor, IEventListener eventListener, string url = "http://*:8080/", int count = 5)
+        public HttpServer(IHttpProcessor processor, IEventListener eventListener, string url = "http://*:8082/", int count = 5)
         {
             _processor = processor;
             _eventListener = eventListener;
-            _server = new HttpListener();
-            _server.Prefixes.Add(url);
+            _prefix = url;
             _threadCount = count;
             _url = url;
         }
@@ -34,14 +36,15 @@ namespace Next.Accounts_Server.Web_Space
 
         public void Start()
         {
-            if (_server.IsListening)
-            {
-                Close();
-            }
+            Close();
+            //if (_server != null && _server.IsListening) Close();
 
             try
             {
+                _server = new HttpListener();
+                _server.Prefixes.Add(_prefix);
                 _server.Start();
+                _activeStatement = true;
             }
             catch (HttpListenerException ex)
             {
@@ -70,18 +73,20 @@ namespace Next.Accounts_Server.Web_Space
 
         public void Close()
         {
-            _server.Stop();
+            if (_server != null && _server.IsListening) _server?.Stop();
             if (_threads == null) return;
+            _activeStatement = false;
             foreach (var thread in _threads)
             {
                 thread.Abort();
             }
+            _threads = null;
             _eventListener.OnMessage("Listenning stopped");
         }
 
         public void Listenning()
         {
-            while (_server.IsListening)
+            while (_activeStatement)
             {
                 try
                 {
@@ -90,6 +95,8 @@ namespace Next.Accounts_Server.Web_Space
                 }
                 catch (Exception ex)
                 {
+                    if (ex.Message == "Операция ввода/вывода была прервана из-за завершения потока команд или по запросу приложения" ||
+                        ex.Message == "Поток находился в процессе прерывания.") continue;
                     _eventListener.OnException(ex);
                 }
             }

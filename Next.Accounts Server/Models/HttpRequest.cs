@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Next.Accounts_Server.Models
 {
-    public class Request
+    public class HttpRequest
     {
         public string HttpMethod { get; set; }
 
@@ -17,5 +17,12 @@ namespace Next.Accounts_Server.Models
         public string RawUrl { get; set; }
 
         public string PostData { get; set; } = null;
+
+        public string SenderAddress { get; set; }
+
+        public override string ToString()
+        {
+            return $"Sender={SenderAddress}, HttpMethod={HttpMethod}, ContentLength={ContentLength}, RawUrl={RawUrl}";
+        }
     }
 }

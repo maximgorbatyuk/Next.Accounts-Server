@@ -23,5 +23,7 @@ namespace Next.Accounts_Server.Database_Namespace
 
         Task<int> RemoveAccountAsync(Account account);
 
+        Task<int> RestoreAccounts(IList<Account> source);
+
     }
 }

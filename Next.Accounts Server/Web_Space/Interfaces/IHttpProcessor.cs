@@ -1,7 +1,6 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 
-namespace Next.Accounts_Server.Web_Space
+namespace Next.Accounts_Server.Web_Space.Interfaces
 {
     public interface IHttpProcessor
     {

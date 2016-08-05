@@ -19,5 +19,7 @@
         public static readonly string ComputerNameColumn = "ComputerName";
 
         public static readonly string NoComputer = "NoComputer";
+
+        public static readonly string CenterOwnerColumn = "Owner";
     }
 }

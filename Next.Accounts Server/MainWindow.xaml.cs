@@ -29,12 +29,14 @@ namespace Next.Accounts_Server
     {
 
         private HttpServer _server;
+        private LiteDatabase _database;
         ///private TcpServer _tcpServer;
 
         public MainWindow()
         {
             InitializeComponent();
-            var clientProcessor = new HttpClientProcessor(this);
+            _database = new LiteDatabase(this);
+            var clientProcessor = new HttpClientResponder(this, _database);
             _server = new HttpServer(clientProcessor, this);
 
             TestDatabase();
@@ -83,26 +85,26 @@ namespace Next.Accounts_Server
 
         public void UpdateAccountCount(int count, int available)
         {
-            throw new NotImplementedException();
+            var text = $"Accounts in DB: {count}, available: {available}";
+            CountLabel.Dispatcher.InvokeAsync(() => CountLabel.Content = text);
         }
 
         private async void TestDatabase()
         {
             var account = new Account
             {
-                Id = 1488,
+                Id = 228,
                 Login = "Maxim",
                 Password = "pass",
                 Available = true,
                 ComputerName = ""
             };
-            var db = new LiteDatabase(this);
-            DisplayText($" Добавлено аккаунтов: {await db.AddAccountAsync(account)}");
+            DisplayText($" Добавлено аккаунтов: {await _database.AddAccountAsync(account)}");
 
-            var freeAcc = await db.GetAccount(null, true);
+            var freeAcc = await _database.GetAccount(null, true);
             DisplayText(freeAcc != null ? $"Взят аккаунт {freeAcc}" : "Таблица акков пуста");
 
-            var releaseResult = await db.ReleaseAccount(freeAcc);
+            var releaseResult = await _database.ReleaseAccount(freeAcc);
             DisplayText($"Результат возврата аккаунта: {releaseResult}, аккаунт {freeAcc}");
 
         }
