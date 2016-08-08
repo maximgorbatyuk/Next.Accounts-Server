@@ -18,11 +18,13 @@ namespace Next.Accounts_Server.Web_Space
 
         private readonly IEventListener _eventListener;
         private readonly IDatabase _database;
+        private readonly Sender _me;
 
-        public HttpClientResponder(IEventListener eventListener, IDatabase database)
+        public HttpClientResponder(IEventListener eventListener, IDatabase database, Sender me)
         {
             _eventListener = eventListener;
             _database = database;
+            _me = me;
         }
 
 
@@ -72,13 +74,14 @@ namespace Next.Accounts_Server.Web_Space
                 Code = 200,
                 JsonObject = null,
                 RequestType = null,
-                StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl
+                StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl,
+                JsonSender = _me.ToJson()
             };
             switch (type)
             {
                 case ApiRequests.GetAccount:
-                    var copmuter = apiRequest.JsonObject.ParseJson<Computer>();
-                    var accountToSend = await _database.GetAccount(copmuter);
+                    var sender = apiRequest.JsonSender.ParseJson<Sender>();
+                    var accountToSend = await _database.GetAccount(sender);
                     response.JsonObject = accountToSend != null ? accountToSend.ToJson() : null;
                     response.Code = accountToSend != null ? 200 : 404;
                     response.RequestType = "GetAccount";

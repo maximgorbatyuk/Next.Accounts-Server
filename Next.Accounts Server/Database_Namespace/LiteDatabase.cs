@@ -25,12 +25,15 @@ namespace Next.Accounts_Server.Database_Namespace
 
         private readonly IEventListener _eventListener;
 
-        public LiteDatabase(IEventListener listener, string dbName = null)
+        private readonly IDatabaseListener _dbListener;
+
+        public LiteDatabase(IEventListener listener, IDatabaseListener dbListener, string dbName = null)
         {
             _eventListener = listener;
+            _dbListener = dbListener;
             DatabaseName = dbName ?? DatabaseName;
             InitDirectories();
-            var path = $"{Environment.CurrentDirectory}\\Databases\\{DatabaseName}";
+            var path = $"{Environment.CurrentDirectory}\\App_data\\{DatabaseName}";
             _connectionString = $"Data Source = {path}; Version=3;";
             _connection = new SQLiteConnection { ConnectionString = _connectionString };
             if (!File.Exists(path)) SQLiteConnection.CreateFile(DatabaseName);
@@ -40,7 +43,7 @@ namespace Next.Accounts_Server.Database_Namespace
 
         public void InitDirectories()
         {
-            var path = $"{Environment.CurrentDirectory}\\Databases\\";
+            var path = $"{Environment.CurrentDirectory}\\App_data\\";
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             path = $"{Environment.CurrentDirectory}\\Logs\\";
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
@@ -68,7 +71,7 @@ namespace Next.Accounts_Server.Database_Namespace
 
         private async Task<int> ExecuteNonQueryAsync(string query)
         {
-            var result = 0;
+            var result = -1;
             var command = new SQLiteCommand(query, _connection);
             try
             {
@@ -117,15 +120,15 @@ namespace Next.Accounts_Server.Database_Namespace
             return result;
         }
 
-        private async void DeleteAccountsTable() => 
-            await ExecuteNonQueryAsync("delete from steam_accounts where id>0");
+        private async Task<int> DeleteAccountsTable() => 
+            await ExecuteNonQueryAsync($"delete from {_accountTableName} where id>0");
 
         public void Dispose()
         {
             _connection.Dispose();
         }
 
-        public async Task<Account> GetAccount(Computer computer, bool free = false)
+        public async Task<Account> GetAccount(Sender sender, bool free = false)
         {
             Account account = null;
             var accounts = await GetListOfAccountsAsync(free);
@@ -134,11 +137,11 @@ namespace Next.Accounts_Server.Database_Namespace
             account = accounts.FirstOrDefault(a => a.Available == true);
             if (account == null) return null;
             account.Available = false;
-            account.ComputerName = computer != null ? computer.Name : NoComputer;
+            account.ComputerName = sender != null ? sender.Name : NoComputer;
 
             var freeCount = accounts.Where(a => a.Available == true).ToList();
             var allCount = accounts.Count;
-            _eventListener.UpdateAccountCount(allCount, freeCount.Count);
+            _dbListener.UpdateAccountCount(allCount, freeCount.Count);
 
             var count = await UpdateAccountAsync(account);
             return account;
@@ -151,7 +154,7 @@ namespace Next.Accounts_Server.Database_Namespace
             return await UpdateAccountAsync(account);
         }
 
-//        public async void UpdateComputer(Computer computer)
+//        public async void UpdateComputer(Sender Sender)
 //        {
 //            throw new NotImplementedException();
 //        }
@@ -163,6 +166,36 @@ namespace Next.Accounts_Server.Database_Namespace
                         $"{ComputerNameColumn}='{account.ComputerName}' " +
                         $"WHERE {IdColumn}={account.Id}";
             return await ExecuteNonQueryAsync(query);
+        }
+
+        public async Task<int> UpdateAccountAsync(IList<Account> accounts)
+        {
+            if (accounts.Count == 0) return 0;
+            var count = 0;
+            foreach (var a in accounts)
+            {
+                count += await UpdateAccountAsync(a);
+            }
+            return count;
+
+            /*var query = $"insert into {_accountTableName} " +
+                        $"({IdColumn}, {LoginColumn}, {PasswordColumn}, {AvailableColumn}, {CenterOwnerColumn}, {ComputerNameColumn}) values ";
+            var values = "";
+            for (var index = 0; index < accounts.Count; index++)
+            {
+                var a = accounts[index];
+                values +=
+                    $"({a.Id}, '{a.Login}', '{a.Password}', {a.Available.ToInt()}, '{a.CenterOwner}', '{a.ComputerName}')";
+                if (index != accounts.Count - 1) values += ", ";
+            }
+            query +=
+                $"{values} on duplicate key update " +
+                $"{LoginColumn}=values({LoginColumn}), " +
+                $"{PasswordColumn}=values({PasswordColumn}), " +
+                $"{AvailableColumn}=values({AvailableColumn}), " +
+                $"{CenterOwnerColumn}=values({CenterOwnerColumn})," +
+                $"{ComputerNameColumn}=values({ComputerNameColumn}),";
+            return await ExecuteNonQueryAsync(query);*/
         }
 
         public async Task<List<Account>> GetListOfAccountsAsync(bool free = false)
@@ -191,7 +224,7 @@ namespace Next.Accounts_Server.Database_Namespace
             return accounts;
         }
 
-        public async Task<int> AddAccountsAsync(IList<Account> source)
+        public async Task<int> AddAccountAsync(IList<Account> source)
         {
             if (source.Count == 0) return 0;
             var query = $"replace into {_accountTableName} " +
@@ -209,7 +242,7 @@ namespace Next.Accounts_Server.Database_Namespace
         public async Task<int> AddAccountAsync(Account account)
         {
             var list = new List<Account> { account };
-            var result = await AddAccountsAsync(list);
+            var result = await AddAccountAsync(list);
             return result;
         }
 
@@ -220,9 +253,12 @@ namespace Next.Accounts_Server.Database_Namespace
             return result;
         }
 
-        public Task<int> RestoreAccounts(IList<Account> source)
+        public async Task<int> RestoreAccounts(IList<Account> source)
         {
-            throw new NotImplementedException();
+            var count = await DeleteAccountsTable();
+            if (count == -1) return -1;
+            var result = await AddAccountAsync(source);
+            return result;
         }
     }
 }

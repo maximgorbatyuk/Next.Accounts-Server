@@ -8,6 +8,8 @@
 
         public string JsonObject { get; set; } = null;
 
+        public string JsonSender { get; set; } = null;
+
         public string StringMessage { get; set; } = null;
     }
 }

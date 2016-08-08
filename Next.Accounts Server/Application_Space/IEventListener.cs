@@ -1,4 +1,5 @@
 ﻿using System;
+using Next.Accounts_Server.Models;
 
 namespace Next.Accounts_Server.Application_Space
 {
@@ -8,6 +9,6 @@ namespace Next.Accounts_Server.Application_Space
 
         void OnMessage(string message);
 
-        void UpdateAccountCount(int count, int available);
+        
     }
 }

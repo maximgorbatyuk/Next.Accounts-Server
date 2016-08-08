@@ -7,17 +7,19 @@ namespace Next.Accounts_Server.Database_Namespace
 {
     public interface IDatabase
     {
-        Task<Account> GetAccount(Computer computer, bool free = false);
+        Task<Account> GetAccount(Sender sender, bool free = false);
 
         Task<int> ReleaseAccount(Account account);
 
-        //void UpdateComputer(Computer computer);
+        //void UpdateComputer(Sender Sender);
 
         Task<int> UpdateAccountAsync(Account account);
 
+        Task<int> UpdateAccountAsync(IList<Account> accounts);
+
         Task<List<Account>> GetListOfAccountsAsync(bool free = false);
 
-        Task<int> AddAccountsAsync(IList<Account> source);
+        Task<int> AddAccountAsync(IList<Account> source);
 
         Task<int> AddAccountAsync(Account account);
 

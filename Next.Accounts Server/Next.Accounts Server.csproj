@@ -49,6 +49,10 @@
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Npgsql, Version=3.1.7.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Npgsql.3.1.7\lib\net451\Npgsql.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
@@ -85,9 +89,16 @@
     </ApplicationDefinition>
     <Compile Include="Application_Space\Const.cs" />
     <Compile Include="Application_Space\IEventListener.cs" />
+    <Compile Include="Application_Space\ISettingsChangedListener.cs" />
     <Compile Include="Controllers\DefaultLogger.cs" />
-    <Compile Include="Controllers\ILogger.cs" />
+    <Compile Include="Controllers\DefaultUsedTracker.cs" />
+    <Compile Include="Controllers\Interfaces\ILogger.cs" />
+    <Compile Include="Controllers\IOController.cs" />
+    <Compile Include="Controllers\Interfaces\IUsedTracker.cs" />
+    <Compile Include="Database_Namespace\IDatabaseListener.cs" />
+    <Compile Include="Database_Namespace\IRemoteStorage.cs" />
     <Compile Include="Database_Namespace\LiteDatabase.cs" />
+    <Compile Include="Database_Namespace\PostgresDatabase.cs" />
     <Compile Include="Extensions\CollectionExtensions.cs" />
     <Compile Include="Extensions\JsonExtensions.cs" />
     <Compile Include="Database_Namespace\IDatabase.cs" />
@@ -95,16 +106,20 @@
     <Compile Include="Extensions\TcpExtensions.cs" />
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\HttpRequest.cs" />
+    <Compile Include="Models\Settings.cs" />
     <Compile Include="Web_Space\HttpClientResponder.cs" />
     <Compile Include="Web_Space\Interfaces\ITcpListener.cs" />
     <Compile Include="Web_Space\Model\ApiMessage.cs" />
-    <Compile Include="Models\Computer.cs" />
+    <Compile Include="Models\Sender.cs" />
     <Compile Include="Web_Space\Interfaces\IHttpProcessor.cs" />
     <Compile Include="Web_Space\HttpServer.cs" />
     <Compile Include="Web_Space\Model\ApiRequests.cs" />
     <Compile Include="Web_Space\TcpClientResponder.cs" />
     <Compile Include="Web_Space\TcpServer.cs" />
-    <Page Include="MainWindow.xaml">
+    <Compile Include="Views\SettingsWindows.xaml.cs">
+      <DependentUpon>SettingsWindows.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -112,10 +127,14 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\SettingsWindows.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
