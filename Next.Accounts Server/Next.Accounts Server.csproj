@@ -90,6 +90,8 @@
     <Compile Include="Application_Space\Const.cs" />
     <Compile Include="Application_Space\IEventListener.cs" />
     <Compile Include="Application_Space\ISettingsChangedListener.cs" />
+    <Compile Include="Timers\ITimeListener.cs" />
+    <Compile Include="Timers\WorkTimer.cs" />
     <Compile Include="Controllers\DefaultLogger.cs" />
     <Compile Include="Controllers\DefaultUsedTracker.cs" />
     <Compile Include="Controllers\Interfaces\ILogger.cs" />
@@ -114,8 +116,6 @@
     <Compile Include="Web_Space\Interfaces\IHttpProcessor.cs" />
     <Compile Include="Web_Space\HttpServer.cs" />
     <Compile Include="Web_Space\Model\ApiRequests.cs" />
-    <Compile Include="Web_Space\TcpClientResponder.cs" />
-    <Compile Include="Web_Space\TcpServer.cs" />
     <Compile Include="Views\SettingsWindows.xaml.cs">
       <DependentUpon>SettingsWindows.xaml</DependentUpon>
     </Compile>

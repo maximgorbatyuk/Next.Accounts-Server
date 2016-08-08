@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 namespace Next.Accounts_Server.Application_Space
@@ -35,7 +36,8 @@ namespace Next.Accounts_Server.Application_Space
         {
             var me = Dns.GetHostName();
             var addresses = Dns.GetHostEntry(me).AddressList;
-            return addresses;
+            var localAddresses = addresses.Where(a => a.ToString().Contains("192.168"));
+            return localAddresses;
         }
     }
 }

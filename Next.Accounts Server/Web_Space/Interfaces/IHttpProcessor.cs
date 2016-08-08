@@ -6,6 +6,6 @@ namespace Next.Accounts_Server.Web_Space.Interfaces
     {
         void OnRequestReceived(HttpListenerContext context);
 
-        void ReturnWebError(HttpListenerContext context, string message, int code = 404);
+        void ReturnWebError(HttpListenerContext context, string message);
     }
 }

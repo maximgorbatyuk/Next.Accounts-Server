@@ -5,9 +5,6 @@ namespace Next.Accounts_Server.Controllers
 {
     public interface IUsedTracker
     {
-        void Start();
-
-        void Stop();
 
         bool AddAccount(Account account);
 
@@ -20,5 +17,7 @@ namespace Next.Accounts_Server.Controllers
         bool Clear();
 
         List<Account> ClearUpUsed();
+
+        void IncreaseTime();
     }
 }

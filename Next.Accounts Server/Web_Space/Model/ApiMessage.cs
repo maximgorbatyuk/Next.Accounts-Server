@@ -11,5 +11,14 @@
         public string JsonSender { get; set; } = null;
 
         public string StringMessage { get; set; } = null;
+
+        public override string ToString()
+        {
+            var jsonObject = JsonObject ?? "null";
+            var jsonSender = JsonSender ?? "null";
+            var stringMessage = StringMessage ?? "null";
+            var requestType = RequestType ?? "null";
+            return $"Api message (code: {Code}, type: {requestType}, object: {jsonObject}, sender: {jsonSender}, message: {stringMessage}";
+        }
     }
 }

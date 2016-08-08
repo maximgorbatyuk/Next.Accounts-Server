@@ -18,7 +18,7 @@ namespace Next.Accounts_Server.Models
 
         public override string ToString()
         {
-            return $"Id={Id}, Login={Login}, Available={Available}, Owner={CenterOwner}";
+            return $"{Login} (id{Id}, owner={CenterOwner})";
         }
     }
 }

@@ -21,6 +21,7 @@ using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Database_Namespace;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
+using Next.Accounts_Server.Timers;
 using Next.Accounts_Server.Web_Space;
 using Next.Accounts_Server.Windows;
 
@@ -29,12 +30,15 @@ namespace Next.Accounts_Server
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IEventListener, IDatabaseListener, ISettingsChangedListener
+    public partial class MainWindow : Window, IEventListener, IDatabaseListener, ISettingsChangedListener, ITimeListener
     {
 
         private HttpServer _server;
         private LiteDatabase _database;
         private Settings _settings;
+        private IUsedTracker _usedTracker;
+        private bool _firstLaunch = true;
+        private WorkTimer _workTimer;
         ///private TcpServer _tcpServer;
 
         public MainWindow()
@@ -42,7 +46,23 @@ namespace Next.Accounts_Server
             InitializeComponent();
             InitSettings();
             DisplayIpAddresses();
-            
+            _workTimer = new WorkTimer(this);
+        }
+
+        private async void CheckUsedAccounts()
+        {
+            if (!_firstLaunch) return;
+            var used = await _database.GetAccounts(false);
+            if (used == null) return;
+            _usedTracker.AddAccount(used);
+            var text = "Server found used accounts in database. Here is a list:\r\n";
+
+            foreach (var a in used)
+            {
+                text += $"{a}\r\n";
+            }
+            DisplayText(text);
+            _firstLaunch = false;
         }
 
         private async void InitSettings(Settings s = null)
@@ -64,6 +84,7 @@ namespace Next.Accounts_Server
                 
             }
             _database = new LiteDatabase(this, this, _settings.DatabaseName);
+            
             var me = new Sender()
             {
                 AppType = Const.ServerAppType,
@@ -71,9 +92,15 @@ namespace Next.Accounts_Server
                 IpAddress = Const.GetAddresses().Where(a => a.ToString().Contains("192.168.1")).ToString(),
                 Name = _settings.CenterName
             };
-            var clientProcessor = new HttpClientResponder(this, _database, me);
-            _server             = new HttpServer(clientProcessor, this);
-            
+            _usedTracker = new DefaultUsedTracker( 2 /*_settings.UsedMinuteLimit*/);
+            var clientProcessor = new HttpClientResponder(me)
+            {
+                Database = _database,
+                EventListener = this,
+                UsedTracker = _usedTracker
+            };
+            _server = new HttpServer(clientProcessor, this);
+            CheckUsedAccounts();
         }
 
         private void DisplayIpAddresses()
@@ -136,7 +163,7 @@ namespace Next.Accounts_Server
         private async void TestDatabase()
         {
             if (_database == null) return;
-            var accounts = await _database.GetListOfAccountsAsync();
+            var accounts = await _database.GetAccounts();
             DisplayText($"Got {accounts.Count} of accounts");
             foreach (var a in accounts)
             {
@@ -162,6 +189,15 @@ namespace Next.Accounts_Server
             var currentFolder = Environment.CurrentDirectory;
             Process.Start(currentFolder);
             
+        }
+
+        public void UpdateTime(TimeSpan difference)
+        {
+            var hours = difference.Hours < 10 ? $"0{difference.Hours}" : difference.Hours.ToString();
+            var min = difference.Minutes < 10 ? $"0{difference.Minutes}" : difference.Minutes.ToString();
+            var sec = difference.Seconds < 10 ? $"0{difference.Seconds}" : difference.Seconds.ToString();
+            var time = $"Work time: {hours}:{min}:{sec}";
+            TimeDisplayer.Dispatcher.InvokeAsync(() => TimeDisplayer.Content = time);
         }
     }
 }

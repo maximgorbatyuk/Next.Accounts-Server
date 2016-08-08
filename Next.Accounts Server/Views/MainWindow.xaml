@@ -7,12 +7,16 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525" Closing="Window_Closing">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="141"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="28"/>
             <RowDefinition/>
             <RowDefinition Height="36"/>
         </Grid.RowDefinitions>
-        <Menu x:Name="MainMenu" Background="#FFC5DCFD" Margin="0,0,0,5">
+        <Menu x:Name="MainMenu" Background="#FFC5DCFD" Margin="0,0,0,5" Grid.ColumnSpan="2">
             <MenuItem Header="Program">
                 <MenuItem Header="Open settings" Name="OpenSettingsButton" Click="OpenSettingsButton_OnClick"/>
                 <MenuItem Header="Open folder" Name="OpenFolderButton" Click="OpenFolderButton_OnClick"/>
@@ -24,11 +28,12 @@
                 <MenuItem Header="TestFunction" Name="TestFunctionButton" Click="TestFunctionButton_OnClick"/>
             </MenuItem>
         </Menu>
-        <TextBox x:Name="LogTextBox" Margin="10" TextWrapping="Wrap" Grid.Row="1"/>
-        <StatusBar Grid.Row="2" Margin="0,3,0,0">
+        <TextBox x:Name="LogTextBox" Margin="10" TextWrapping="Wrap" Grid.Row="1" Grid.ColumnSpan="2"/>
+        <StatusBar Grid.Row="2" Margin="0,3,0,0" Grid.ColumnSpan="2" Grid.Column="0">
             <Label x:Name="AddressLabel" Content="here is addresses" Width="157"/>
-            <Label x:Name="CountLabel" Content="Here is count of accounts" Width="212"/>
+            <Label x:Name="CountLabel" Content="Here is count of accounts" Width="201"/>
         </StatusBar>
+        <Label x:Name="TimeDisplayer" Content="Label" Grid.Column="1" Margin="7,7,10,0" Grid.Row="2"/>
 
     </Grid>
 </Window>

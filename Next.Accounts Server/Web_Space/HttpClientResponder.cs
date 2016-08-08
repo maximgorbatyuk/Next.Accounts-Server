@@ -4,7 +4,9 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using Next.Accounts_Server.Application_Space;
+using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Database_Namespace;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
@@ -13,18 +15,41 @@ using Next.Accounts_Server.Web_Space.Model;
 
 namespace Next.Accounts_Server.Web_Space
 {
-    public class HttpClientResponder : IHttpProcessor
+    public class HttpClientResponder : IHttpProcessor, IDisposable
     {
 
-        private readonly IEventListener _eventListener;
-        private readonly IDatabase _database;
+        public  IEventListener EventListener { get; set; }
+
+        public IDatabase Database { get; set; }
+
+        private readonly DispatcherTimer _timer;
+
+        public IUsedTracker UsedTracker { get; set; }
+
         private readonly Sender _me;
 
-        public HttpClientResponder(IEventListener eventListener, IDatabase database, Sender me)
+        public HttpClientResponder(Sender me, int min = 1)
         {
-            _eventListener = eventListener;
-            _database = database;
             _me = me;
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(min) };
+            _timer.Tick += UsedTrackerTimerTick;
+            _timer.Start();
+        }
+
+        private void UsedTrackerTimerTick(object sender, EventArgs eventArgs)
+        {
+            var exspired = UsedTracker.ClearUpUsed();
+            UsedTracker.IncreaseTime();
+            if (exspired == null) return;
+
+            var text = "Released next accounts with expired \"using\" time by server: \r\n";
+            for (int index = 0; index < exspired.Count; index++)
+            {
+                var account = exspired[index];
+                Database.ReleaseAccount(account);
+                text += $"{index + 1}) account {account})\r\n";
+            }
+            EventListener.OnMessage(text);
         }
 
 
@@ -51,17 +76,25 @@ namespace Next.Accounts_Server.Web_Space
             var apiMessage = request.PostData.ParseJson<ApiMessage>();
             var requestType = GetRequestType(apiMessage);
             var response = await CreateHttpResponseAsync(requestType, request);
-            CloseHttpContext(context, response);
+            if (response != null)
+            {
+                CloseHttpContext(context, response);
+            }
+            else
+            {
+                ReturnWebError(context, "Server could not recognize received request");
+            }
         }
 
-        public void ReturnWebError(HttpListenerContext context, string message, int code = 404)
+        public void ReturnWebError(HttpListenerContext context, string message)
         {
             var api = new ApiMessage
             {
                 Code = 404,
-                JsonObject = message,
+                JsonObject = null,
                 RequestType = "Error",
-                StringMessage = message
+                StringMessage = message,
+                JsonSender = _me.ToJson()
             };
             CloseHttpContext(context, api, HttpStatusCode.NotFound);
         }
@@ -77,39 +110,83 @@ namespace Next.Accounts_Server.Web_Space
                 StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl,
                 JsonSender = _me.ToJson()
             };
+
+            var sender = apiRequest.JsonSender.ParseJson<Sender>();
+            string messageToDisplay = null;
             switch (type)
             {
                 case ApiRequests.GetAccount:
-                    var sender = apiRequest.JsonSender.ParseJson<Sender>();
-                    var accountToSend = await _database.GetAccount(sender);
-                    response.JsonObject = accountToSend != null ? accountToSend.ToJson() : null;
-                    response.Code = accountToSend != null ? 200 : 404;
+                    var accountToSend = await Database.GetAccount(sender);
                     response.RequestType = "GetAccount";
-                    response.StringMessage = accountToSend != null ? "" : "No accounts available";
+
+                    if (accountToSend != null)
+                    {
+                        response.JsonObject = accountToSend.ToJson();
+                        response.Code = 200;
+                        response.StringMessage = "AvailableAccount";
+                        if (sender.AppType == Const.ClientAppType)
+                        {
+                            UsedTracker.AddAccount(accountToSend);
+                        }
+                        messageToDisplay = $"Account {accountToSend} has been sent to {sender}";
+                    }
+                    else
+                    {
+                        response.JsonObject = null;
+                        response.Code = 404;
+                        response.StringMessage = "No accounts available";
+                        messageToDisplay = $"Request from {sender} has been denied";
+                    }
                     break;
+
                 case ApiRequests.ReleaseAccount:
+                    response.RequestType = "ReleaseAccount";
+                    response.JsonObject = null;
                     if (apiRequest.JsonObject != "null")
                     {
-                        var releaseAccount = apiRequest.JsonObject.ParseJson<Account>();
-                        int result = await _database.ReleaseAccount(releaseAccount);
-                        response.JsonObject = null;
+                        var releaseAccount = apiRequest.JsonObject?.ParseJson<Account>();
+                        int result = await Database.ReleaseAccount(releaseAccount);
                         response.Code = 200;
-                        response.RequestType = "ReleaseAccount";
                         response.StringMessage = "Account has been released";
+                        var releaseResult = false;
+                        if (sender.AppType == Const.ClientAppType)
+                        {
+                            releaseResult = UsedTracker.RemoveAccount(releaseAccount);
+                        }
+                        messageToDisplay = releaseResult ? 
+                            $"Account {releaseAccount}({result}) has been released. Sender {sender}" :
+                            $"Got a request to release an account: {releaseAccount} from {sender}, but it has been released earier";
                     }
                     else
                     {
                         response.Code = 404;
-                        response.RequestType = "ReleaseAccount";
                         response.StringMessage = "Account has not been released because of null data";
+                        messageToDisplay = $"Received release request with null data from {sender}";
                     }
-                    
+
                     break;
+                case ApiRequests.UsingAccount:
+                    response.RequestType = "UsingAccount";
+                    var usingAccount = apiRequest.JsonSender?.ParseJson<Account>();
+                    if (usingAccount != null)
+                    {
+                        var resetResult = UsedTracker.ResetTimer(usingAccount);
+                        //resetResult
+                        if (!resetResult) messageToDisplay = $"Could not reset time of account {usingAccount}";
+                    }
+                    else
+                    {
+                        messageToDisplay = $"Server has received a messsage from {sender} about using of account, " +
+                                           $"but List of used does not contain it. Message: {apiRequest}";
+                    }
+                    break;
+                case ApiRequests.Unknown:
+                case ApiRequests.None:
                 default:
-                    response.Code = 404;
-                    response.RequestType = "UnknownRequest";
+                    response = null;
                     break;
             }
+            if (messageToDisplay != null) EventListener.OnMessage(messageToDisplay);
             return response;
         }
 
@@ -120,7 +197,7 @@ namespace Next.Accounts_Server.Web_Space
             var buffer = response.ToJson().ToBuffer();
             context.Response.ContentLength64 = buffer.Length;
             context.Response.StatusCode = (int) code;
-            _eventListener.OnMessage($"Processed client: " +
+            EventListener.OnMessage($"Processed client: " +
                                      $"{context.Request.LocalEndPoint?.Address}:{context.Request.LocalEndPoint?.Port}");
             context.Response.Close(buffer, false);
         }
@@ -142,6 +219,11 @@ namespace Next.Accounts_Server.Web_Space
                     break;
             }
             return result;
+        }
+
+        public void Dispose()
+        {
+            _timer?.Stop();
         }
     }
 }

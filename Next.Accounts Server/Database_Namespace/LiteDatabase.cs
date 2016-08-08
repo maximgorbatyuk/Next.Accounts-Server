@@ -27,6 +27,10 @@ namespace Next.Accounts_Server.Database_Namespace
 
         private readonly IDatabaseListener _dbListener;
 
+        private int _allCount = 0;
+
+        private int _availableCount = 0;
+
         public LiteDatabase(IEventListener listener, IDatabaseListener dbListener, string dbName = null)
         {
             _eventListener = listener;
@@ -128,10 +132,10 @@ namespace Next.Accounts_Server.Database_Namespace
             _connection.Dispose();
         }
 
-        public async Task<Account> GetAccount(Sender sender, bool free = false)
+        public async Task<Account> GetAccount(Sender sender)
         {
             Account account = null;
-            var accounts = await GetListOfAccountsAsync(free);
+            var accounts = await GetAccounts();
             if (accounts.Count == 0) return null;
 
             account = accounts.FirstOrDefault(a => a.Available == true);
@@ -139,9 +143,10 @@ namespace Next.Accounts_Server.Database_Namespace
             account.Available = false;
             account.ComputerName = sender != null ? sender.Name : NoComputer;
 
-            var freeCount = accounts.Where(a => a.Available == true).ToList();
-            var allCount = accounts.Count;
-            _dbListener.UpdateAccountCount(allCount, freeCount.Count);
+            var availAc = accounts.Where(a => a.Available == true).ToList();
+            _availableCount = availAc.Count;
+            _allCount = accounts.Count;
+            _dbListener.UpdateAccountCount(_allCount, _availableCount);
 
             var count = await UpdateAccountAsync(account);
             return account;
@@ -151,13 +156,10 @@ namespace Next.Accounts_Server.Database_Namespace
         {
             account.Available = true;
             account.ComputerName = "";
+            _availableCount++;
+            _dbListener.UpdateAccountCount(_allCount, _availableCount);
             return await UpdateAccountAsync(account);
         }
-
-//        public async void UpdateComputer(Sender Sender)
-//        {
-//            throw new NotImplementedException();
-//        }
 
         public async Task<int> UpdateAccountAsync(Account account)
         {
@@ -177,33 +179,15 @@ namespace Next.Accounts_Server.Database_Namespace
                 count += await UpdateAccountAsync(a);
             }
             return count;
-
-            /*var query = $"insert into {_accountTableName} " +
-                        $"({IdColumn}, {LoginColumn}, {PasswordColumn}, {AvailableColumn}, {CenterOwnerColumn}, {ComputerNameColumn}) values ";
-            var values = "";
-            for (var index = 0; index < accounts.Count; index++)
-            {
-                var a = accounts[index];
-                values +=
-                    $"({a.Id}, '{a.Login}', '{a.Password}', {a.Available.ToInt()}, '{a.CenterOwner}', '{a.ComputerName}')";
-                if (index != accounts.Count - 1) values += ", ";
-            }
-            query +=
-                $"{values} on duplicate key update " +
-                $"{LoginColumn}=values({LoginColumn}), " +
-                $"{PasswordColumn}=values({PasswordColumn}), " +
-                $"{AvailableColumn}=values({AvailableColumn}), " +
-                $"{CenterOwnerColumn}=values({CenterOwnerColumn})," +
-                $"{ComputerNameColumn}=values({ComputerNameColumn}),";
-            return await ExecuteNonQueryAsync(query);*/
         }
 
-        public async Task<List<Account>> GetListOfAccountsAsync(bool free = false)
+        public async Task<List<Account>> GetAccounts(bool all = true)
         {
-            var query = $"SELECT * FROM {_accountTableName}";
+            var query = all ? $"SELECT * FROM {_accountTableName}" : $"SELECT * FROM {_accountTableName} WHERE {AvailableColumn}=0";
             var dt = await GetQueryResultAsync(query);
             List<Account> accounts = null;
-            if (dt.Rows.Count <= 0) return null;
+            if (dt == null) return null;
+            if (dt.Rows.Count == 0) return null;
             accounts = new List<Account>();
             foreach (DataRow row in dt.Rows)
             {
@@ -221,6 +205,8 @@ namespace Next.Accounts_Server.Database_Namespace
                     ComputerName = computerName
                 });
             }
+            _allCount = all ? accounts.Count : _allCount;
+            _dbListener.UpdateAccountCount(_allCount, _availableCount);
             return accounts;
         }
 
@@ -233,9 +219,12 @@ namespace Next.Accounts_Server.Database_Namespace
             {
                 var account = source[index];
                 query += $"({account.Id}, '{account.Login}', '{account.Password}', {account.Available.ToInt()}, '{account.ComputerName}')";
+                _allCount++;
+                _availableCount++;
                 if (index != (source.Count - 1)) query += ", ";
             }
             var count = await ExecuteNonQueryAsync(query);
+            _dbListener.UpdateAccountCount(_allCount, _availableCount);
             return count;
         }
 
@@ -250,6 +239,9 @@ namespace Next.Accounts_Server.Database_Namespace
         {
             var query = $"delete from {_accountTableName} where {IdColumn}={account.Id}";
             var result = await ExecuteNonQueryAsync(query);
+            _allCount--;
+            _availableCount--;
+            _dbListener.UpdateAccountCount(_allCount, _availableCount);
             return result;
         }
 
@@ -258,6 +250,9 @@ namespace Next.Accounts_Server.Database_Namespace
             var count = await DeleteAccountsTable();
             if (count == -1) return -1;
             var result = await AddAccountAsync(source);
+            _allCount = source.Count;
+            _availableCount = source.Count(a => a.Available == true);
+            _dbListener.UpdateAccountCount(_allCount, _availableCount);
             return result;
         }
     }

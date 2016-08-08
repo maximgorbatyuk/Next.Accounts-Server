@@ -6,41 +6,16 @@ using Next.Accounts_Server.Models;
 
 namespace Next.Accounts_Server.Controllers
 {
-    public class DefaultUsedTracker : IUsedTracker
+    public class DefaultUsedTracker : IUsedTracker, IDisposable
     {
-        private readonly Dictionary<Account, int> _usedAccounts;
+        private Dictionary<Account, int> _usedAccounts;
 
-        public int MinuteLimit { get; set; }
-
-        private readonly DispatcherTimer _timer;
+        private readonly int _minute;
 
         public DefaultUsedTracker(int minutes = 5)
         {
-            MinuteLimit = minutes;
             _usedAccounts = new Dictionary<Account, int>();
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(MinuteLimit) };
-            _timer.Tick += UsedTrackerTimerTick;
-            
-        }
-
-        private void UsedTrackerTimerTick(object sender, EventArgs eventArgs)
-        {
-            if (_usedAccounts == null) return;
-
-        }
-
-
-        public void Start()
-        {
-            _timer?.Start();
-        }
-
-        public void Stop()
-        {
-            if (_timer.IsEnabled)
-            {
-                _timer.Stop();
-            }
+            _minute = minutes;
         }
 
         public bool AddAccount(Account account)
@@ -66,18 +41,18 @@ namespace Next.Accounts_Server.Controllers
             var last = _usedAccounts.Count;
             var removeTo = _usedAccounts.Keys.Where(a => a.Id == account.Id).ToList();
             if (!removeTo.Any()) return false;
-            foreach (var acc in removeTo)
+            foreach (var acc in removeTo.ToList())
             {
                 _usedAccounts.Remove(acc);
             }
-            return _usedAccounts.Count > last;
+            return _usedAccounts.Count < last;
         }
             
 
         public bool ResetTimer(Account account)
         {
             var result = false;
-            foreach (var key in _usedAccounts.Keys)
+            foreach (var key in _usedAccounts.Keys.ToList())
             {
                 if (key.Id != account.Id) continue;
                 _usedAccounts[key] = 0;
@@ -94,8 +69,31 @@ namespace Next.Accounts_Server.Controllers
 
         public List<Account> ClearUpUsed()
         {
-            var result = (from pair in _usedAccounts where pair.Value > MinuteLimit select pair.Key).ToList();
+            List<Account> result = null;
+            foreach (var key in _usedAccounts.Keys.ToList())
+            {
+                if (_usedAccounts[key] <= _minute) continue;
+
+                if (result == null) result = new List<Account>();
+
+                result.Add(key);
+                RemoveAccount(key);
+            }
+            //result = (from pair in _usedAccounts where pair.Value > _minute select pair.Key).ToList();
             return result;
+        }
+
+        public void IncreaseTime()
+        {
+            foreach (var key in _usedAccounts.Keys.ToList())
+            {
+                _usedAccounts[key] += 1;
+            }
+        }
+
+        public void Dispose()
+        {
+            _usedAccounts = null;
         }
     }
 }
