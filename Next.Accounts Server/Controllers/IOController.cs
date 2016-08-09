@@ -19,7 +19,7 @@ namespace Next.Accounts_Server.Controllers
             return result;
         }
 
-        public static async void WriteToFileAsync(string filename, string text)
+        public static async Task WriteToFileAsync(string filename, string text)
         {
             using (var stream = File.CreateText(filename))
             {

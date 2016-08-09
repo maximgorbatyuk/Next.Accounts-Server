@@ -70,21 +70,8 @@ namespace Next.Accounts_Server
         private async void InitSettings(Settings s = null)
         {
             if (s != null) _settings = s;
-            else
-            {
-                //var filename = $"{Environment.CurrentDirectory}\\App_data\\{Const.SettingsFilename}";
-                var settingsText = await IoController.ReadFileAsync(Const.SettingsFilename);
-                if (settingsText == null)
-                {
-                    _settings = new Settings();
-                    IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
-                }
-                else
-                {
-                    _settings = settingsText.ParseJson<Settings>();
-                }
-                
-            }
+            else _settings = await LoadOrGetDefault();
+
             _logger = new DefaultLogger();
             _database = new LiteDatabase(this, this, _settings.DatabaseName);
 
@@ -96,15 +83,35 @@ namespace Next.Accounts_Server
                 EventListener = this,
                 UsedTracker = _usedTracker
             };
+            _server?.Close();
             _server = new HttpServer(clientProcessor, this);
             CheckUsedAccounts();
             StartListenButton_OnClick(this, null);
         }
 
+        private async Task<Settings> LoadOrGetDefault()
+        {
+            var settingsText = await IoController.ReadFileAsync(Const.SettingsFilename);
+            Settings settings = null;
+            if (settingsText == null)
+            {
+                settings = new Settings();
+                IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
+            }
+            else
+            {
+                settings = settingsText.ParseJson<Settings>();
+            }
+            return settings;
+        }
+
         private void DisplayIpAddresses()
         {
-            var addresses = Const.GetAddresses();
+            var addresses = Const.GetAddresses().ToList();
+            var main = addresses.FirstOrDefault(a => a.ToString().Contains("192.168.1."));
             var text = addresses.Aggregate("Available IP addresses:\r\n", (current, ip) => current + $"{ip.ToString()}\r\n");
+            
+            if (main != null) AddressLabel.Content = main;
             DisplayText(text);
         }
 

@@ -29,18 +29,33 @@ namespace Next.Accounts_Client
         private IUsingTracker _usingTracker;
         private ILogger _logger;
         private App_data.Settings _settings;
-        private readonly Sender _sender;
+        private Sender _sender;
         private Account _account = null;
-        private string[] _arguments = null;
+        private readonly string[] _arguments = null;
         private string _gameCode = null;
         private bool _connectionActive = false;
 
         public Form1(string[] args)
         {
             InitializeComponent();
+            InitSettings();
+            _arguments = args;
+        }
+
+        private async void InitSettings()
+        {
+            var stringSettings = await IoController.ReadFileAsync(Const.SettingsFilename);
+            if (stringSettings == null)
+            {
+                _settings = new App_data.Settings();
+                IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
+            }
+            else { _settings = stringSettings.ParseJson<App_data.Settings>(); }
+
+
             _sender = Const.GetSender();
             _logger = new DefaultLogger();
-            _settings = new App_data.Settings();
+            
             _requestSender = new WebClientController(this, this);
             _processLauncher = new DefaultProcessLauncher(this);
             _processTracker = new ProcessTracker(_settings)
@@ -50,7 +65,6 @@ namespace Next.Accounts_Client
                 TrackerListener = this
             };
             _usingTracker = new DefaultUsingTracker(_requestSender, _sender);
-            _arguments = args;
         }
 
         private async void RequestAccount()

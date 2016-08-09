@@ -28,5 +28,6 @@ namespace Next.Accounts_Server.Database_Namespace
 
         Task<int> RestoreAccounts(IList<Account> source);
 
+        Task<int> DeleteAccountsTable();
     }
 }

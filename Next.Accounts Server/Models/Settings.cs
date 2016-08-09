@@ -1,4 +1,6 @@
-﻿namespace Next.Accounts_Server.Models
+﻿using System.Collections.Generic;
+
+namespace Next.Accounts_Server.Models
 {
     public class Settings
     {
@@ -8,7 +10,9 @@
 
         public string CenterName { get; set; } = "Unknown";
 
-        public bool AskAccounts { get; set; } = false;
+        public bool AskAccounts { get; set; } = false; //
+
+        public List<string> AddressesList { get; set; } = null; //
 
         public bool GiveAccounts { get; set; } = false;
 

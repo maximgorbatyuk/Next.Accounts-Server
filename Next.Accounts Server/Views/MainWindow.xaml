@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Next.Accounts_Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="411.421" Width="705.362" Closing="Window_Closing">
+        Title="MainWindow" Height="411.421" Width="705.362" Closing="Window_Closing" Icon="/Next.Accounts Server;component/cloud_server_icon_3.ico" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -21,7 +21,7 @@
                 <MenuItem Header="Open settings" Name="OpenSettingsButton" Click="OpenSettingsButton_OnClick"/>
                 <MenuItem Header="Open folder" Name="OpenFolderButton" Click="OpenFolderButton_OnClick"/>
             </MenuItem>
-            <MenuItem Header="Server">
+            <MenuItem Header="Server" Height="23">
                 <MenuItem Header="Start listenning" Name="StartListenButton" Click="StartListenButton_OnClick"/>
             </MenuItem>
             <MenuItem Header="Database">

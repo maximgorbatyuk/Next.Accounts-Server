@@ -124,7 +124,7 @@ namespace Next.Accounts_Server.Database_Namespace
             return result;
         }
 
-        private async Task<int> DeleteAccountsTable() => 
+        public async Task<int> DeleteAccountsTable() => 
             await ExecuteNonQueryAsync($"delete from {_accountTableName} where id>0");
 
         public void Dispose()
