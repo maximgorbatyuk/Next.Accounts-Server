@@ -7,6 +7,7 @@ namespace Next.Accounts_Server.Database_Namespace
 {
     public interface IDatabase
     {
+
         Task<Account> GetAccount(Sender sender);
 
         Task<int> ReleaseAccount(Account account);

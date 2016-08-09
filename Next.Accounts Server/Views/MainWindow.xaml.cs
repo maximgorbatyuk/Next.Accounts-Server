@@ -39,6 +39,7 @@ namespace Next.Accounts_Server
         private IUsedTracker _usedTracker;
         private bool _firstLaunch = true;
         private WorkTimer _workTimer;
+        private ILogger _logger;
         ///private TcpServer _tcpServer;
 
         public MainWindow()
@@ -53,7 +54,8 @@ namespace Next.Accounts_Server
         {
             if (!_firstLaunch) return;
             var used = await _database.GetAccounts(false);
-            if (used == null) return;
+            if (used?.Count == 0) return;
+
             _usedTracker.AddAccount(used);
             var text = "Server found used accounts in database. Here is a list:\r\n";
 
@@ -83,15 +85,10 @@ namespace Next.Accounts_Server
                 }
                 
             }
+            _logger = new DefaultLogger();
             _database = new LiteDatabase(this, this, _settings.DatabaseName);
-            
-            var me = new Sender()
-            {
-                AppType = Const.ServerAppType,
-                AppVersion = "1",
-                IpAddress = Const.GetAddresses().Where(a => a.ToString().Contains("192.168.1")).ToString(),
-                Name = _settings.CenterName
-            };
+
+            var me = Const.GetSender(client: false);
             _usedTracker = new DefaultUsedTracker( 2 /*_settings.UsedMinuteLimit*/);
             var clientProcessor = new HttpClientResponder(me)
             {
@@ -101,16 +98,13 @@ namespace Next.Accounts_Server
             };
             _server = new HttpServer(clientProcessor, this);
             CheckUsedAccounts();
+            StartListenButton_OnClick(this, null);
         }
 
         private void DisplayIpAddresses()
         {
-            var text = "Сервер доступен по следующим адресам:\r\n";
             var addresses = Const.GetAddresses();
-            foreach (var ip in addresses)
-            {
-                text += $"{ip.ToString()}\r\n";
-            }
+            var text = addresses.Aggregate("Available IP addresses:\r\n", (current, ip) => current + $"{ip.ToString()}\r\n");
             DisplayText(text);
         }
 
@@ -121,6 +115,7 @@ namespace Next.Accounts_Server
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _server?.Close();
+            _workTimer?.Stop();
         }
 
         private void StartListenButton_OnClick(object sender, RoutedEventArgs e)
@@ -141,11 +136,13 @@ namespace Next.Accounts_Server
         {
             var text = $"Exception catched:\nStack: {ex.StackTrace}\nMessage: {ex.Message}";
             DisplayText(text);
+            _logger.LogError(ex.Message);
         }
 
         public void OnMessage(string message)
         {
             DisplayText(message);
+            _logger.Log(message);
         }
 
         public void UpdateAccountCount(int count, int available)
@@ -188,7 +185,6 @@ namespace Next.Accounts_Server
         {
             var currentFolder = Environment.CurrentDirectory;
             Process.Start(currentFolder);
-            
         }
 
         public void UpdateTime(TimeSpan difference)
@@ -198,6 +194,12 @@ namespace Next.Accounts_Server
             var sec = difference.Seconds < 10 ? $"0{difference.Seconds}" : difference.Seconds.ToString();
             var time = $"Work time: {hours}:{min}:{sec}";
             TimeDisplayer.Dispatcher.InvokeAsync(() => TimeDisplayer.Content = time);
+        }
+
+        private void LogTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            LogTextBox.ScrollToEnd();
+            LogTextBox.CaretIndex = LogTextBox.Text.Length - 1;
         }
     }
 }

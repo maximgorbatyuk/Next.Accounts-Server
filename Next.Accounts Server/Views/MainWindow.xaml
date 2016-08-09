@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Next.Accounts_Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" Closing="Window_Closing">
+        Title="MainWindow" Height="411.421" Width="705.362" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -28,7 +28,8 @@
                 <MenuItem Header="TestFunction" Name="TestFunctionButton" Click="TestFunctionButton_OnClick"/>
             </MenuItem>
         </Menu>
-        <TextBox x:Name="LogTextBox" Margin="10" TextWrapping="Wrap" Grid.Row="1" Grid.ColumnSpan="2"/>
+        <TextBox x:Name="LogTextBox" Margin="10" TextWrapping="Wrap" Grid.Row="1" Grid.ColumnSpan="2"
+                 VerticalScrollBarVisibility="Auto" TextChanged="LogTextBox_TextChanged"/>
         <StatusBar Grid.Row="2" Margin="0,3,0,0" Grid.ColumnSpan="2" Grid.Column="0">
             <Label x:Name="AddressLabel" Content="here is addresses" Width="157"/>
             <Label x:Name="CountLabel" Content="Here is count of accounts" Width="201"/>

@@ -183,7 +183,8 @@ namespace Next.Accounts_Server.Database_Namespace
 
         public async Task<List<Account>> GetAccounts(bool all = true)
         {
-            var query = all ? $"SELECT * FROM {_accountTableName}" : $"SELECT * FROM {_accountTableName} WHERE {AvailableColumn}=0";
+            //var query = all ? $"SELECT * FROM {_accountTableName}" : $"SELECT * FROM {_accountTableName} WHERE {AvailableColumn}=0";
+            var query = $"SELECT * FROM {_accountTableName}";
             var dt = await GetQueryResultAsync(query);
             List<Account> accounts = null;
             if (dt == null) return null;
@@ -205,7 +206,10 @@ namespace Next.Accounts_Server.Database_Namespace
                     ComputerName = computerName
                 });
             }
-            _allCount = all ? accounts.Count : _allCount;
+            _allCount = accounts.Count;
+            _availableCount = accounts.Count(a => a.Available == true);
+
+            accounts = all ? accounts : accounts.Where(a => a.Available == false).ToList();
             _dbListener.UpdateAccountCount(_allCount, _availableCount);
             return accounts;
         }

@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Windows;
+using Next.Accounts_Server.Models;
+using Next.Accounts_Server.Web_Space.Model;
 
 namespace Next.Accounts_Server.Application_Space
 {
@@ -32,12 +36,55 @@ namespace Next.Accounts_Server.Application_Space
 
         public static readonly string ServerAppType = "Server";
 
+        public static readonly string RequestTypeUsing = "UsingAccount";
+
+        public static readonly string RequestTypeGet = "GetAccount";
+
+        public static readonly string RequestTypeRelease = "ReleaseAccount";
+
         public static IEnumerable<IPAddress> GetAddresses()
         {
             var me = Dns.GetHostName();
             var addresses = Dns.GetHostEntry(me).AddressList;
             var localAddresses = addresses.Where(a => a.ToString().Contains("192.168"));
             return localAddresses;
+        }
+
+        public static ApiRequests GetRequestType(ApiMessage api)
+        {
+            var result = ApiRequests.None;
+            if (api.RequestType == null) return result;
+            switch (api.RequestType)
+            {
+                case "GetAccount":
+                    result = ApiRequests.GetAccount;
+                    break;
+                case "ReleaseAccount":
+                    result = ApiRequests.ReleaseAccount;
+                    break;
+
+                case "UsingAccount":
+                    result = ApiRequests.UsingAccount;
+                    break;
+                default:
+                    result = ApiRequests.Unknown;
+                    break;
+            }
+            return result;
+        }
+
+        public static Sender GetSender(string version = "1", bool client = true)
+        {
+            var ip = Const.GetAddresses().SingleOrDefault(a => a.ToString().Contains("192.168.1."));
+            var stringIp = ip?.ToString() ?? "null ip";
+            var sender = new Sender
+            {
+                AppVersion = version,
+                AppType = client ? Const.ClientAppType : Const.ServerAppType,
+                IpAddress = stringIp,
+                Name = Environment.MachineName
+            };
+            return sender;
         }
     }
 }

@@ -74,7 +74,7 @@ namespace Next.Accounts_Server.Web_Space
             }
 
             var apiMessage = request.PostData.ParseJson<ApiMessage>();
-            var requestType = GetRequestType(apiMessage);
+            var requestType = Const.GetRequestType(apiMessage);
             var response = await CreateHttpResponseAsync(requestType, request);
             if (response != null)
             {
@@ -117,7 +117,7 @@ namespace Next.Accounts_Server.Web_Space
             {
                 case ApiRequests.GetAccount:
                     var accountToSend = await Database.GetAccount(sender);
-                    response.RequestType = "GetAccount";
+                    response.RequestType = Const.RequestTypeGet;
 
                     if (accountToSend != null)
                     {
@@ -140,13 +140,14 @@ namespace Next.Accounts_Server.Web_Space
                     break;
 
                 case ApiRequests.ReleaseAccount:
-                    response.RequestType = "ReleaseAccount";
+                    response.RequestType = Const.RequestTypeRelease;
                     response.JsonObject = null;
                     if (apiRequest.JsonObject != "null")
                     {
                         var releaseAccount = apiRequest.JsonObject?.ParseJson<Account>();
                         int result = await Database.ReleaseAccount(releaseAccount);
                         response.Code = 200;
+                        response.JsonObject = releaseAccount.ToJson();
                         response.StringMessage = "Account has been released";
                         var releaseResult = false;
                         if (sender.AppType == Const.ClientAppType)
@@ -166,13 +167,24 @@ namespace Next.Accounts_Server.Web_Space
 
                     break;
                 case ApiRequests.UsingAccount:
-                    response.RequestType = "UsingAccount";
-                    var usingAccount = apiRequest.JsonSender?.ParseJson<Account>();
+                    response.RequestType = Const.RequestTypeUsing;
+                    response.JsonObject = null;
+                    var usingAccount = apiRequest.JsonObject?.ParseJson<Account>();
                     if (usingAccount != null)
                     {
                         var resetResult = UsedTracker.ResetTimer(usingAccount);
-                        //resetResult
-                        if (!resetResult) messageToDisplay = $"Could not reset time of account {usingAccount}";
+                        if (resetResult)
+                        {
+                            response.Code = 200;
+                            response.JsonObject = usingAccount.ToJson();
+                            response.StringMessage = "Account time has been reset";
+                        }
+                        else
+                        {
+                            response.Code = 404;
+                            response.StringMessage = "Account time has not been reset";
+                            messageToDisplay = $"Could not reset time of account {usingAccount}";
+                        }
                     }
                     else
                     {
@@ -197,29 +209,21 @@ namespace Next.Accounts_Server.Web_Space
             var buffer = response.ToJson().ToBuffer();
             context.Response.ContentLength64 = buffer.Length;
             context.Response.StatusCode = (int) code;
-            EventListener.OnMessage($"Processed client: " +
-                                     $"{context.Request.LocalEndPoint?.Address}:{context.Request.LocalEndPoint?.Port}");
-            context.Response.Close(buffer, false);
+            //EventListener.OnMessage($"Processed client: " +
+            //                         $"{context.Request.LocalEndPoint?.Address}:{context.Request.LocalEndPoint?.Port}");
+            try
+            {
+                context.Response.Close(buffer, false);
+            }
+            catch (HttpListenerException ex)
+            {
+                if (ex.ErrorCode == 1229) return;
+                EventListener.OnException(ex);
+            }
+            catch (Exception ex) { EventListener.OnException(ex);}
         }
 
-        private ApiRequests GetRequestType(ApiMessage api)
-        {
-            var result = ApiRequests.None;
-            if (api.RequestType == null) return result;
-            switch (api.RequestType)
-            {
-                case "GetAccount":
-                    result = ApiRequests.GetAccount;
-                    break;
-                case "ReleaseAccount":
-                    result = ApiRequests.ReleaseAccount;
-                    break;
-                default:
-                    result = ApiRequests.Unknown;
-                    break;
-            }
-            return result;
-        }
+        
 
         public void Dispose()
         {
