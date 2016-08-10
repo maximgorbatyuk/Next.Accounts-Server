@@ -23,5 +23,7 @@ namespace Next.Accounts_Server.Models
         public bool DefaultSettings { get; set; } = true;
 
         public int UsedMinuteLimit { get; set; } = 5;
+
+        public bool CloseOnException { get; set; } = false;
     }
 }

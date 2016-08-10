@@ -41,10 +41,20 @@ namespace Next.Accounts_Server.Controllers
         public async void WriteToFile(string filename, string write)
         {
             //if (!File.Exists(filename)) File.Create(filename);
-            using (var stream = File.AppendText(filename))
+            StreamWriter stream = null;
+            try
             {
+                stream = File.AppendText(filename);
                 var text = $"[{DateTime.Now}] {write}";
                 await stream.WriteLineAsync(text);
+            }
+            catch (Exception ex)
+            {
+                // ignored
+            }
+            finally
+            {
+                stream?.Close();
             }
         }
     }

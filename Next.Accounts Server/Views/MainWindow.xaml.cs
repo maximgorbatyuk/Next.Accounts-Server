@@ -206,7 +206,8 @@ namespace Next.Accounts_Server
 
         private void AboutMenu_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            Process.Start("https://github.com/maximgorbatyuk/Next.Accounts-Server");
+            //throw new NotImplementedException();
         }
     }
 }

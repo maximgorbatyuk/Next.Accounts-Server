@@ -51,11 +51,15 @@ namespace Next.Accounts_Server.Windows
             IssueLimitCheck.IsChecked = source.SetIssueLimit;
             IssueLimitTextBox.Text = source.IssueLimitValue.ToString();
             ExpiredTextBox.Text = source.UsedMinuteLimit.ToString();
+            CloseOnExCheck.IsChecked = source.CloseOnException;
         }
 
         private Settings GetSettingsFromComponents()
         {
-            var addresses = AddressesTextBox.Text.Split('\n').ToList();
+            var addressesText = AddressesTextBox.Text.Replace("\r", "");
+            var addresses = addressesText.Split('\n').ToList();
+            addresses = addresses.Where(a => !string.IsNullOrWhiteSpace(a.ToString())).ToList();
+
             var issueLimit = !string.IsNullOrWhiteSpace(IssueLimitTextBox.Text) ? int.Parse(IssueLimitTextBox.Text) : 10;
             var expired = !string.IsNullOrWhiteSpace(ExpiredTextBox.Text) ? int.Parse(ExpiredTextBox.Text) : 5;
             var settings = new Settings
@@ -68,7 +72,8 @@ namespace Next.Accounts_Server.Windows
                 SetIssueLimit = IssueLimitCheck.IsChecked != null && IssueLimitCheck.IsChecked.Value,
                 IssueLimitValue = issueLimit,
                 UsedMinuteLimit = expired,
-                DefaultSettings = false
+                DefaultSettings = false,
+                CloseOnException = CloseOnExCheck.IsChecked != null && CloseOnExCheck.IsChecked.Value
             };
             return settings;
         }
