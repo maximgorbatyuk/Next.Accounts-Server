@@ -25,6 +25,7 @@ namespace Next.Accounts_Server.Web_Space
 
         public HttpServer(IHttpProcessor processor, IEventListener eventListener, string url = "http://*:8082/", int count = 5)
         {
+            
             _processor = processor;
             _eventListener = eventListener;
             _prefix = url;
@@ -43,6 +44,8 @@ namespace Next.Accounts_Server.Web_Space
             {
                 _server = new HttpListener();
                 _server.Prefixes.Add(_prefix);
+                _server.Prefixes.Add("http://192.168.1.100:8082/");
+                // "http://192.168.1.100:8082/"
                 _server.Start();
                 _activeStatement = true;
             }
