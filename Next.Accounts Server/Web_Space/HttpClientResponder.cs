@@ -89,7 +89,8 @@ namespace Next.Accounts_Server.Web_Space
             } 
             else if (request.HttpMethod == "GET")
             {
-                var html = await GetHtmlPage(context);
+                var html = await GetHtmlPage(context) ??
+                           "<h1>Infopage.html does not exists</h1><h2>Load it from github</h2>";
                 CloseHttpContext(context, html, contentType: "text/html");
                 EventListener.OnMessage("GET request has been processed");
             }
@@ -100,7 +101,13 @@ namespace Next.Accounts_Server.Web_Space
             var html = await IoController.ReadFileAsync(Const.HtmlPageFilename);
             var accounts = await Database.GetAccounts();
             if (html == null) return null;
-            html = html.Replace("#CenterName", _settings.CenterName);
+            var meText = $"Information about server:" +
+                         $"<ul>" +
+                         $"<li>Version: {_me.AppVersion}</li>" +
+                         $"<li>Machine name: {_me.Name}</li>" +
+                         $"<li>Local IP: {_me.IpAddress}</li>" +
+                         $"</ul>";
+            //html = html.Replace("#CenterName", _settings.CenterName).Replace("#me", meText);
             string accountList = "No accounts in local storage (Null data)";
             if (accounts != null)
             {
@@ -110,16 +117,20 @@ namespace Next.Accounts_Server.Web_Space
                     accountList = accounts.Aggregate("<ul class=\"list-group\">",
                     (current, a) => current + $"<li class=\"list-group-item\">{a}</li>");
                 }
-                html.Replace("#AccountList", accountList);
+                //html.Replace("#AccountList", accountList);
             }
-            html = html.Replace("#AccountList", accountList);
+            //html = html.Replace("#AccountList", accountList).Replace("#CenterName", _settings.CenterName).Replace("#me", meText);
             var request = context.Request;
             var senderText = $"Request data:<br>" +
                              $"HttpMethod: {request.HttpMethod}<br>" +
                              $"End point: {request.RemoteEndPoint?.Address.ToString()}:{request.RemoteEndPoint?.Port}<br>" +
                              $"User agent: {request.UserAgent}<br>" +
                              $"Raw url: {request.RawUrl}";
-            html = html.Replace("#sender", senderText);
+            html = html
+                .Replace("#sender", senderText)
+                .Replace("#AccountList", accountList)
+                .Replace("#CenterName", _settings.CenterName)
+                .Replace("#me", meText);
             return html;
         } 
 
