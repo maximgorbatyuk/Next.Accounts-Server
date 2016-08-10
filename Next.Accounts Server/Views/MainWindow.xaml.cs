@@ -1,21 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Database_Namespace;
@@ -48,6 +37,14 @@ namespace Next.Accounts_Server
             InitSettings();
             DisplayIpAddresses();
             _workTimer = new WorkTimer(this);
+            //AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+        }
+
+        private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs unhandledExceptionEventArgs)
+        {
+            if (_settings == null || !_settings.CloseOnException) return;
+            var me = Process.GetCurrentProcess();
+            me.Kill();
         }
 
         private async void CheckUsedAccounts()
@@ -57,13 +54,9 @@ namespace Next.Accounts_Server
             if (used?.Count == 0) return;
 
             _usedTracker.AddAccount(used);
-            var text = "Server found used accounts in database. Here is a list:\r\n";
+            var text = used?.Aggregate("Server found used accounts in database. Here is a list:\r\n", (current, a) => current + $"{a}\r\n");
 
-            foreach (var a in used)
-            {
-                text += $"{a}\r\n";
-            }
-            DisplayText(text);
+            if (text != null) DisplayText(text);
             _firstLaunch = false;
         }
 
@@ -76,7 +69,7 @@ namespace Next.Accounts_Server
             _database = new LiteDatabase(this, this, _settings.DatabaseName);
 
             var me = Const.GetSender(client: false);
-            _usedTracker = new DefaultUsedTracker( 2 /*_settings.UsedMinuteLimit*/);
+            _usedTracker = new DefaultUsedTracker( _settings.UsedMinuteLimit);
             var clientProcessor = new HttpClientResponder(me, _settings)
             {
                 Database = _database,
@@ -131,11 +124,13 @@ namespace Next.Accounts_Server
             {
                 StartListenButton.Header = "Start listenning";
                 _server.Close();
+                ServerMenuItem.Background = new SolidColorBrush(Color.FromArgb(255, 227, 158, 158));
             }
             else
             {
                 StartListenButton.Header = "Stop listenning";
                 _server.Start();
+                ServerMenuItem.Background = new SolidColorBrush(Color.FromArgb(255, 158, 227, 174));
             }
         }
 
@@ -206,8 +201,8 @@ namespace Next.Accounts_Server
 
         private void AboutMenu_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/maximgorbatyuk/Next.Accounts-Server");
-            //throw new NotImplementedException();
+            string url = "https://github.com/maximgorbatyuk/Next.Accounts-Server";
+            Process.Start(url);
         }
     }
 }

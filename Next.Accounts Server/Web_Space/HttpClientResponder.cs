@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -74,20 +75,53 @@ namespace Next.Accounts_Server.Web_Space
             if (request.HttpMethod == "POST")
             {
                 request.PostData = new StreamReader(request.InputStream).ReadToEnd();
-            }
-
-            var apiMessage = request.PostData.ParseJson<ApiMessage>();
-            var requestType = Const.GetRequestType(apiMessage);
-            var response = await CreateHttpResponseAsync(requestType, request);
-            if (response != null)
+                var apiMessage = request.PostData.ParseJson<ApiMessage>();
+                var requestType = Const.GetRequestType(apiMessage);
+                var response = await CreateHttpResponseAsync(requestType, request);
+                if (response != null)
+                {
+                    CloseHttpContext(context, response);
+                }
+                else
+                {
+                    ReturnWebError(context, "Server could not recognize received request");
+                }
+            } 
+            else if (request.HttpMethod == "GET")
             {
-                CloseHttpContext(context, response);
-            }
-            else
-            {
-                ReturnWebError(context, "Server could not recognize received request");
+                var html = await GetHtmlPage(context);
+                CloseHttpContext(context, html, contentType: "text/html");
+                EventListener.OnMessage("GET request has been processed");
             }
         }
+
+        private async Task<string> GetHtmlPage(HttpListenerContext context)
+        {
+            var html = await IoController.ReadFileAsync(Const.HtmlPageFilename);
+            var accounts = await Database.GetAccounts();
+            if (html == null) return null;
+            html = html.Replace("#CenterName", _settings.CenterName);
+            string accountList = "No accounts in local storage (Null data)";
+            if (accounts != null)
+            {
+                accountList = "No accounts in local storage";
+                if (accounts.Count > 0)
+                {
+                    accountList = accounts.Aggregate("<ul class=\"list-group\">",
+                    (current, a) => current + $"<li class=\"list-group-item\">{a}</li>");
+                }
+                html.Replace("#AccountList", accountList);
+            }
+            html = html.Replace("#AccountList", accountList);
+            var request = context.Request;
+            var senderText = $"Request data:<br>" +
+                             $"HttpMethod: {request.HttpMethod}<br>" +
+                             $"End point: {request.RemoteEndPoint?.Address.ToString()}:{request.RemoteEndPoint?.Port}<br>" +
+                             $"User agent: {request.UserAgent}<br>" +
+                             $"Raw url: {request.RawUrl}";
+            html = html.Replace("#sender", senderText);
+            return html;
+        } 
 
         public void ReturnWebError(HttpListenerContext context, string message)
         {
@@ -205,11 +239,17 @@ namespace Next.Accounts_Server.Web_Space
             return response;
         }
 
-        private void CloseHttpContext(HttpListenerContext context, ApiMessage response, HttpStatusCode code = HttpStatusCode.OK)
+        private void CloseHttpContext(HttpListenerContext context, ApiMessage response,
+            HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/json; charset=UTF-8")
         {
-            context.Response.ContentType = "text/json; charset=UTF-8";
+            CloseHttpContext(context, response.ToJson(), code, contentType);
+        }
+
+        private void CloseHttpContext(HttpListenerContext context, string response, HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/json; charset=UTF-8")
+        {
+            context.Response.ContentType = contentType;
             context.Response.ContentEncoding = Encoding.ASCII;
-            var buffer = response.ToJson().ToBuffer();
+            var buffer = response.ToBuffer();
             context.Response.ContentLength64 = buffer.Length;
             context.Response.StatusCode = (int) code;
             //EventListener.OnMessage($"Processed client: " +
