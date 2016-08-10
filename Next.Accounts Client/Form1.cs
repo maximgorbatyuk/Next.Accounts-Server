@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,7 +55,7 @@ namespace Next.Accounts_Client
             else { _settings = stringSettings.ParseJson<App_data.Settings>(); }
 
 
-            _sender = Const.GetSender();
+            _sender = Const.GetSender(Assembly.GetExecutingAssembly().GetName().Version.ToString());
             _logger = new DefaultLogger();
             
             _requestSender = new WebClientController(this, this);
@@ -66,6 +67,8 @@ namespace Next.Accounts_Client
                 TrackerListener = this
             };
             _usingTracker = new DefaultUsingTracker(_requestSender, _sender);
+            var version = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
+            VersionLabel.Text = version;
         }
 
         private async void RequestAccount()
@@ -80,7 +83,8 @@ namespace Next.Accounts_Client
                 JsonSender = _sender.ToJson()
             };
             _connectionActive = true;
-            var result = await _requestSender.SendPostDataAsync(api);
+            var sendPostDataAsync = _requestSender?.SendPostDataAsync(api);
+            var result = sendPostDataAsync != null && await sendPostDataAsync;
             
         }
 

@@ -5,23 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Next.Accounts_Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="411.421" Width="705.362" Closing="Window_Closing" Icon="/Next.Accounts Server;component/cloud_server_icon_3.ico" WindowStartupLocation="CenterScreen">
+        Title="Next.Accounts server" Height="411.421" Width="705.362" Closing="Window_Closing" Icon="/Next.Accounts Server;component/cloud_server_icon_3.ico" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition Width="141"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="28"/>
+            <RowDefinition Height="34"/>
             <RowDefinition/>
             <RowDefinition Height="36"/>
         </Grid.RowDefinitions>
         <Menu x:Name="MainMenu" Background="#E2E2E2" Margin="0,0,0,5" Grid.ColumnSpan="2" FontSize="14">
-            <MenuItem Header="Program">
+            <MenuItem Header="Program" Height="29">
                 <MenuItem Header="Open settings" Name="OpenSettingsButton" Click="OpenSettingsButton_OnClick"/>
                 <MenuItem Header="Open folder" Name="OpenFolderButton" Click="OpenFolderButton_OnClick"/>
             </MenuItem>
-            <MenuItem Name="ServerMenuItem" Header="Server" Height="23">
+            <MenuItem Name="ServerMenuItem" Header="Server" Height="29">
                 <MenuItem Header="Start listenning" Name="StartListenButton" Click="StartListenButton_OnClick"/>
             </MenuItem>
             <MenuItem Header="About" Click="AboutMenu_Click">
@@ -31,8 +31,10 @@
         <TextBox x:Name="LogTextBox" Margin="10" TextWrapping="Wrap" Grid.Row="1" Grid.ColumnSpan="2"
                  VerticalScrollBarVisibility="Auto" TextChanged="LogTextBox_TextChanged" FontSize="14"/>
         <StatusBar Grid.Row="2" Margin="0,3,0,0" Grid.ColumnSpan="2" Grid.Column="0" FontSize="14">
+            <Label x:Name="VersionLabel" Content="Version" Width="120"/>
             <Label x:Name="AddressLabel" Content="here is addresses" Width="157"/>
             <Label x:Name="CountLabel" Content="Here is count of accounts" Width="201"/>
+            
         </StatusBar>
         <Label x:Name="TimeDisplayer" Content="Label" Grid.Column="1" Margin="7,7,10,0" Grid.Row="2"/>
 

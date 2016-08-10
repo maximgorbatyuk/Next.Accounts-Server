@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Windows;
 using Next.Accounts_Server.Models;
 using Next.Accounts_Server.Web_Space.Model;
@@ -75,8 +76,9 @@ namespace Next.Accounts_Server.Application_Space
             return result;
         }
 
-        public static Sender GetSender(string version = "1", bool client = true)
+        public static Sender GetSender(string version = null, bool client = true)
         {
+            if (version == null) version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var ip = Const.GetAddresses().SingleOrDefault(a => a.ToString().Contains("192.168.1."));
             var stringIp = ip?.ToString() ?? "null ip";
             var sender = new Sender

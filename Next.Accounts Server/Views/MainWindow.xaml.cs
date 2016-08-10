@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -37,6 +38,8 @@ namespace Next.Accounts_Server
             InitSettings();
             DisplayIpAddresses();
             _workTimer = new WorkTimer(this);
+            var version = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
+            VersionLabel.Content = version;
             //AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
         }
 
@@ -89,7 +92,7 @@ namespace Next.Accounts_Server
             if (settingsText == null)
             {
                 settings = new Settings();
-                IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
+                await IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
             }
             else
             {
