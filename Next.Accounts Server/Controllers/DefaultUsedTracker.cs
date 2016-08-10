@@ -34,6 +34,7 @@ namespace Next.Accounts_Server.Controllers
         public bool AddAccount(IList<Account> accounts)
         {
             var last = _usedAccounts.Count;
+            if (accounts == null) return false;
             foreach (var a in accounts)
             {
                 AddAccount(a);

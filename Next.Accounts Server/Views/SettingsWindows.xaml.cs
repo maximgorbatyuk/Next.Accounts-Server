@@ -188,6 +188,7 @@ namespace Next.Accounts_Server.Windows
         private void LoadListBox(IList<Account> source)
         {
             AccountListBox.Items.Clear();
+            if (source == null) source = new List<Account>();
             foreach (var a in source)
             {
                 AccountListBox.Items.Add(a);

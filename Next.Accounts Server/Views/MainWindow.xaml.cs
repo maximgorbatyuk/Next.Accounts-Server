@@ -89,7 +89,7 @@ namespace Next.Accounts_Server
         {
             var settingsText = await IoController.ReadFileAsync(Const.SettingsFilename);
             Settings settings = null;
-            if (settingsText == null)
+            if (settingsText == null || settingsText == "null")
             {
                 settings = new Settings();
                 await IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
