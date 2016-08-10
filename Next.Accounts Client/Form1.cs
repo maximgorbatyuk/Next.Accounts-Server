@@ -58,7 +58,7 @@ namespace Next.Accounts_Client
             _sender = Const.GetSender(Assembly.GetExecutingAssembly().GetName().Version.ToString());
             _logger = new DefaultLogger();
             
-            _requestSender = new WebClientController(this, this);
+            _requestSender = new WebClientController(this, this, _settings.IpAddress);
             _processLauncher = new DefaultProcessLauncher(this);
             _processTracker = new ProcessTracker(_settings)
             {
