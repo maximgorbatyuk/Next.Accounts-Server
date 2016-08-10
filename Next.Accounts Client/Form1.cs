@@ -34,6 +34,7 @@ namespace Next.Accounts_Client
         private readonly string[] _arguments = null;
         private string _gameCode = null;
         private bool _connectionActive = false;
+        private bool _badConnectionOrDenied = false;
 
         public Form1(string[] args)
         {
@@ -48,7 +49,7 @@ namespace Next.Accounts_Client
             if (stringSettings == null)
             {
                 _settings = new App_data.Settings();
-                IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
+                await IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
             }
             else { _settings = stringSettings.ParseJson<App_data.Settings>(); }
 
@@ -142,7 +143,7 @@ namespace Next.Accounts_Client
 
         public void OnAccountReleased(Account account)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void OnSteamStarted()
@@ -162,11 +163,13 @@ namespace Next.Accounts_Client
         public void OnServerResponse(string responseString)
         {
             _connectionActive = false;
+            OkButton.Enabled = true;
             var apiResponse = responseString.ParseJson<ApiMessage>();
             if (apiResponse == null)
             {
                 DisplayText($"Received null apiResponse: {responseString}");
                 DisplayInMainlabel(_settings.BadConnectionMessage);
+                _badConnectionOrDenied = true;
                 return;
             }
             string displayMessage = null;
@@ -175,6 +178,7 @@ namespace Next.Accounts_Client
             {
                 displayMessage = $"Received responseCode={apiResponse.Code}. String message: {apiResponse.StringMessage}";
                 DisplayText(displayMessage);
+                _badConnectionOrDenied = true;
                 if (requestType == ApiRequests.GetAccount)
                 {
                     DisplayInMainlabel(_settings.NoAvailableAccountsMessage);
@@ -184,6 +188,7 @@ namespace Next.Accounts_Client
             string jsonObject = null;
             Account account = null;
             var sender = apiResponse.JsonSender.ParseJson<Sender>();
+            
             switch (requestType)
             {
                 case ApiRequests.GetAccount:
@@ -228,7 +233,7 @@ namespace Next.Accounts_Client
             }
             DisplayText(displayMessage);
             StopProgressBar();
-            OkButton.Enabled = true;
+            
         }
 
         public void OnConnectionError(Exception ex)
@@ -236,6 +241,7 @@ namespace Next.Accounts_Client
             DisplayInMainlabel(_settings.BadConnectionMessage);
             StopProgressBar();
             OkButton.Enabled = true;
+            _badConnectionOrDenied = true;
         }
 
         private void progresBarTimer_Tick(object sender, EventArgs e)
@@ -265,7 +271,7 @@ namespace Next.Accounts_Client
         private void Form1_Shown(object sender, EventArgs e)
         {
             OkButton.Enabled = false;
-            _processLauncher.CloseProcesses(_settings.ProcessName);
+            _processLauncher?.CloseProcesses(_settings?.ProcessName);
             _gameCode = _arguments != null && _arguments.Length == 2 ? _arguments[0] : "0";
             var title = _arguments != null && _arguments.Length == 2 ? _arguments[1] : "Steam launcher";
             this.Text = title;
@@ -291,7 +297,7 @@ namespace Next.Accounts_Client
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             var reason = e.CloseReason;
-            if (reason == CloseReason.WindowsShutDown)
+            if (reason == CloseReason.WindowsShutDown || _badConnectionOrDenied)
             {
                 if (_account != null) ReleaseAccount();
                 _processLauncher.CloseProcesses(_settings.ProcessName);
@@ -307,6 +313,11 @@ namespace Next.Accounts_Client
             }
             e.Cancel = true;
             WindowState = FormWindowState.Minimized;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            groupBox1.Visible = false;
         }
     }
 }

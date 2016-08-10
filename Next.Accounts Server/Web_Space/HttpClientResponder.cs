@@ -28,9 +28,12 @@ namespace Next.Accounts_Server.Web_Space
 
         private readonly Sender _me;
 
-        public HttpClientResponder(Sender me, int min = 1)
+        private Settings _settings;
+
+        public HttpClientResponder(Sender me, Settings settings, int min = 1)
         {
             _me = me;
+            _settings = settings;
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(min) };
             _timer.Tick += UsedTrackerTimerTick;
             _timer.Start();
@@ -118,8 +121,15 @@ namespace Next.Accounts_Server.Web_Space
                 case ApiRequests.GetAccount:
                     var accountToSend = await Database.GetAccount(sender);
                     response.RequestType = Const.RequestTypeGet;
-
-                    if (accountToSend != null)
+                    var usedCount = UsedTracker.GetUsedCount();
+                    if (accountToSend == null || _settings.SetIssueLimit && usedCount >= _settings.IssueLimitValue)
+                    {
+                        response.JsonObject = null;
+                        response.Code = 404;
+                        response.StringMessage = "No accounts available";
+                        messageToDisplay = $"Request from {sender} has been denied";
+                    }
+                    else
                     {
                         response.JsonObject = accountToSend.ToJson();
                         response.Code = 200;
@@ -129,13 +139,6 @@ namespace Next.Accounts_Server.Web_Space
                             UsedTracker.AddAccount(accountToSend);
                         }
                         messageToDisplay = $"Account {accountToSend} has been sent to {sender}";
-                    }
-                    else
-                    {
-                        response.JsonObject = null;
-                        response.Code = 404;
-                        response.StringMessage = "No accounts available";
-                        messageToDisplay = $"Request from {sender} has been denied";
                     }
                     break;
 

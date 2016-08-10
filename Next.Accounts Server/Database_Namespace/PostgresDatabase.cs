@@ -29,6 +29,7 @@ namespace Next.Accounts_Server.Database_Namespace
         {
             var query = $"select * from steamusers";
             if (predicate != null) query += $" {predicate}";
+            query += " order by id";
             var dt = await GetQueryResultAsync(query);
 
             if (dt == null) return null;
@@ -42,13 +43,15 @@ namespace Next.Accounts_Server.Database_Namespace
                 var id = int.Parse(row[0].ToString());
                 var userName = row[1].ToString();
                 var userPassword = row[2].ToString();
+                var availability = int.Parse(row[3].ToString()) == 1;
+                var centerName = row[4].ToString();
                 var account = new Account
                 {
                     Id = id,
                     Login = userName,
                     Password = userPassword,
-                    Available = true,
-                    CenterOwner = _settings.CenterName,
+                    Available = availability,
+                    CenterOwner = centerName,
                     ComputerName = ""
                 };
                 result.Add(account);

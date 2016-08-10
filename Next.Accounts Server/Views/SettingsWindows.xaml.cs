@@ -179,5 +179,44 @@ namespace Next.Accounts_Server.Windows
             var message = check ? "Connected to postgres" : "No connection to postgres";
             DisplayInfo(message, !check);
         }
+
+        private void LoadListBox(IList<Account> source)
+        {
+            AccountListBox.Items.Clear();
+            foreach (var a in source)
+            {
+                AccountListBox.Items.Add(a);
+            }
+            DisplayInfo($"{source.Count} of items have been loaded");
+        }
+
+        private async void LiteLoadButton_Click(object sender, RoutedEventArgs e)
+        {
+            var accounts = await _database.GetAccounts();
+            LoadListBox(accounts);
+            CenterTextBox.IsEnabled = false;
+        }
+
+        private async void PostgresLoadButton_Click(object sender, RoutedEventArgs e)
+        {
+            var accounts = await _postgres.GetAccounts();
+            LoadListBox(accounts);
+            CenterTextBox.IsEnabled = true;
+        }
+
+        private void LoadAccountToComponents(Account source)
+        {
+            LoginTextBox.Text = source.Login;
+            PasswordTextBox.Text = source.Password;
+            AvailableCheck.IsChecked = source.Available;
+            ComputerTextBox.Text = source.ComputerName;
+            CenterTextBox.Text = source.CenterOwner;
+        }
+
+        private void AccountListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var item = AccountListBox.SelectedItem;
+            if (item != null) LoadAccountToComponents((Account) item);
+        }
     }
 }

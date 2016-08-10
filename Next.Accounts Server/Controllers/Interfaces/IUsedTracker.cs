@@ -6,6 +6,8 @@ namespace Next.Accounts_Server.Controllers
     public interface IUsedTracker
     {
 
+        int GetUsedCount();
+
         bool AddAccount(Account account);
 
         bool AddAccount(IList<Account> accounts);

@@ -24,8 +24,8 @@
             <MenuItem Header="Server" Height="23">
                 <MenuItem Header="Start listenning" Name="StartListenButton" Click="StartListenButton_OnClick"/>
             </MenuItem>
-            <MenuItem Header="Database">
-                <MenuItem Header="TestFunction" Name="TestFunctionButton" Click="TestFunctionButton_OnClick"/>
+            <MenuItem Header="About" Click="AboutMenu_Click">
+                
             </MenuItem>
         </Menu>
         <TextBox x:Name="LogTextBox" Margin="10" TextWrapping="Wrap" Grid.Row="1" Grid.ColumnSpan="2"

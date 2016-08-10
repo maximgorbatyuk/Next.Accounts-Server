@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Next.Accounts_Server.Windows"
         mc:Ignorable="d"
-        Title="SettingsWindows" Height="352" Width="583.287" WindowStartupLocation="CenterScreen" Icon="/Next.Accounts Server;component/cloud_server_icon_3.ico" Topmost="True">
+        Title="SettingsWindows" Height="352" Width="600.287" WindowStartupLocation="CenterScreen" Icon="/Next.Accounts Server;component/cloud_server_icon_3.ico" Topmost="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -60,6 +60,27 @@
                     <Button x:Name="BackupButton" Content="Backup" Grid.Column="1" Margin="10,92,10,0" VerticalAlignment="Top" Height="26" Click="BackupButton_Click"/>
                     <Label x:Name="label5_Copy2" Content="Restore from local backup" Margin="10,123,10,0" Height="26" VerticalAlignment="Top"/>
                     <Button x:Name="RestoreBackupButton" Content="Restore (backup)" Grid.Column="1" Margin="10,123,10,0" VerticalAlignment="Top" Height="26" Click="RestoreBackupButton_Click"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Database values">
+                <Grid Background="#FFE5E5E5" Margin="0,0,2,-5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="258"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="PostgresLoadButton" Content="Load postgres" Margin="0,10,10,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right" Width="117" Click="PostgresLoadButton_Click"/>
+                    <Button x:Name="LiteLoadButton" Content="Load local Db" Margin="10,10,0,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Left" Width="116" Click="LiteLoadButton_Click"/>
+                    <ListBox x:Name="AccountListBox" Margin="10" Grid.Column="1" SelectionChanged="AccountListBox_SelectionChanged"/>
+                    <Label x:Name="label6" Content="Login" HorizontalAlignment="Left" Margin="10,35,0,0" VerticalAlignment="Top" Height="26" Width="39"/>
+                    <TextBox x:Name="LoginTextBox" Height="23" Margin="87,39,10,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top"/>
+                    <Label x:Name="label7" Content="Password" HorizontalAlignment="Left" Margin="11,66,0,0" VerticalAlignment="Top" Height="26" Width="60"/>
+                    <CheckBox x:Name="AvailableCheck" Content="Available" Margin="0,103,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="74" Height="15"/>
+                    <Label x:Name="label8" Content="Availability of the account" HorizontalAlignment="Left" Margin="11,97,0,0" VerticalAlignment="Top" Width="158" Height="26"/>
+                    <Label x:Name="label9" Content="Computer" HorizontalAlignment="Left" Margin="11,128,0,0" VerticalAlignment="Top" Height="26" Width="63"/>
+                    <TextBox x:Name="ComputerTextBox" Height="23" Margin="87,128,10,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top"/>
+                    <Label x:Name="label10" Content="Center(club)" HorizontalAlignment="Left" Margin="11,156,0,0" VerticalAlignment="Top" Height="26" Width="75"/>
+                    <TextBox x:Name="CenterTextBox" Height="23" Margin="87,160,10,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" IsEnabled="False"/>
+                    <TextBox Grid.Column="0" x:Name="PasswordTextBox" Height="23" Margin="87,67,12,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top"/>
                 </Grid>
             </TabItem>
         </TabControl>

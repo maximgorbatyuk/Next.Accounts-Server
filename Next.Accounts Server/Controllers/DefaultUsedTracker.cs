@@ -18,6 +18,11 @@ namespace Next.Accounts_Server.Controllers
             _minute = minutes;
         }
 
+        public int GetUsedCount()
+        {
+            return _usedAccounts.Count;
+        }
+
         public bool AddAccount(Account account)
         {
             var lastCount = _usedAccounts.Count;

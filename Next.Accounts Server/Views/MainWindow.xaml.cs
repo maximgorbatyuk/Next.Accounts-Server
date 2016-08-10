@@ -77,7 +77,7 @@ namespace Next.Accounts_Server
 
             var me = Const.GetSender(client: false);
             _usedTracker = new DefaultUsedTracker( 2 /*_settings.UsedMinuteLimit*/);
-            var clientProcessor = new HttpClientResponder(me)
+            var clientProcessor = new HttpClientResponder(me, _settings)
             {
                 Database = _database,
                 EventListener = this,
@@ -183,11 +183,6 @@ namespace Next.Accounts_Server
             settingsWindows.ShowDialog();
         }
 
-        private void TestFunctionButton_OnClick(object sender, RoutedEventArgs e)
-        {
-            TestDatabase();
-        }
-
         private void OpenFolderButton_OnClick(object sender, RoutedEventArgs e)
         {
             var currentFolder = Environment.CurrentDirectory;
@@ -207,6 +202,11 @@ namespace Next.Accounts_Server
         {
             LogTextBox.ScrollToEnd();
             LogTextBox.CaretIndex = LogTextBox.Text.Length - 1;
+        }
+
+        private void AboutMenu_Click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }
