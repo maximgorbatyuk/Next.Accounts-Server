@@ -46,6 +46,7 @@ namespace Next.Accounts_Server.Web_Space
                 _server.Prefixes.Add(_prefix);
                 //_server.Prefixes.Add("http://192.168.1.100:8082/");
                 // "http://192.168.1.100:8082/"
+                _server.TimeoutManager.RequestQueue = TimeSpan.FromSeconds(10);
                 _server.Start();
                 _activeStatement = true;
             }

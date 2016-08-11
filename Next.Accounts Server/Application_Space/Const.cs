@@ -90,5 +90,12 @@ namespace Next.Accounts_Server.Application_Space
             };
             return sender;
         }
+
+        public static int GetRandomNumber(int max, int min = 0)
+        {
+            var random = new Random(DateTime.Now.Millisecond);
+            var result = random.Next(min, max);
+            return result;
+        }
     }
 }

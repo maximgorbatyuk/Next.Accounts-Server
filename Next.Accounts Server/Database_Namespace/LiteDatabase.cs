@@ -125,7 +125,7 @@ namespace Next.Accounts_Server.Database_Namespace
         }
 
         public async Task<int> DeleteAccountsTable() => 
-            await ExecuteNonQueryAsync($"delete from {_accountTableName} where Id>0");
+            await ExecuteNonQueryAsync($"delete from {_accountTableName} where {IdColumn}>0");
 
         public void Dispose()
         {
@@ -136,15 +136,18 @@ namespace Next.Accounts_Server.Database_Namespace
         {
             Account account = null;
             var accounts = await GetAccounts();
-            if (accounts.Count == 0) return null;
+            if (accounts.Count == 0)
+            {
+                _dbListener.UpdateAccountCount(0, 0);
+                return null;
+            }
 
-            account = accounts.FirstOrDefault(a => a.Available == true);
+            //account = accounts.FirstOrDefault(a => a.Available == true);
+            account = accounts.GetRandomAccount();
             if (account == null) return null;
             account.Available = false;
             account.ComputerName = sender != null ? sender.Name : NoComputer;
-
-            var availAc = accounts.Where(a => a.Available == true).ToList();
-            _availableCount = availAc.Count;
+            _availableCount = accounts.Count(a => a.Available == true);
             _allCount = accounts.Count;
             _dbListener.UpdateAccountCount(_allCount, _availableCount);
 
@@ -256,6 +259,10 @@ namespace Next.Accounts_Server.Database_Namespace
         {
             var count = await DeleteAccountsTable();
             if (count == -1) return -1;
+            foreach (var account in source)
+            {
+                account.Available = true;
+            }
             var result = await AddAccountAsync(source);
             _allCount = source.Count;
             _availableCount = source.Count(a => a.Available == true);
