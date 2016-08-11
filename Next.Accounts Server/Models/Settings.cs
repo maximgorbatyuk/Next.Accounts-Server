@@ -8,6 +8,8 @@ namespace Next.Accounts_Server.Models
 
         public string PostgresConnectionString { get; set; } = "Host=Off.ala.next.kz;Port=5432;User ID=postgres;Password=AsusNotebook;Database=postgres;";
 
+        public string Port { get; set; } = "8082";
+
         public string CenterName { get; set; } = "Unknown";
 
         public bool AskAccounts { get; set; } = false; //
