@@ -125,7 +125,7 @@ namespace Next.Accounts_Server.Database_Namespace
         }
 
         public async Task<int> DeleteAccountsTable() => 
-            await ExecuteNonQueryAsync($"delete from {_accountTableName} where id>0");
+            await ExecuteNonQueryAsync($"delete from {_accountTableName} where Id>0");
 
         public void Dispose()
         {
@@ -164,7 +164,8 @@ namespace Next.Accounts_Server.Database_Namespace
         public async Task<int> UpdateAccountAsync(Account account)
         {
             var query = $"UPDATE {_accountTableName} " +
-                        $"SET {AvailableColumn}={account.Available.ToInt()}, " +
+                        $"SET " +
+                        $"{AvailableColumn}={account.Available.ToInt()}, " +
                         $"{ComputerNameColumn}='{account.ComputerName}' " +
                         $"WHERE {IdColumn}={account.Id}";
             return await ExecuteNonQueryAsync(query);
@@ -197,13 +198,15 @@ namespace Next.Accounts_Server.Database_Namespace
                 var pass        = row[PasswordColumn].ToString();
                 bool available  = int.Parse(row[AvailableColumn].ToString()) == 1;
                 var computerName = row[ComputerNameColumn].ToString();
+                var owner = row[CenterOwnerColumn].ToString();
                 accounts.Add(new Account
                 {
                     Id = id,
                     Login = login,
                     Password = pass,
                     Available = available,
-                    ComputerName = computerName
+                    ComputerName = computerName,
+                    CenterOwner = owner
                 });
             }
             _allCount = accounts.Count;
@@ -218,11 +221,11 @@ namespace Next.Accounts_Server.Database_Namespace
         {
             if (source.Count == 0) return 0;
             var query = $"replace into {_accountTableName} " +
-                        $"({IdColumn}, {LoginColumn}, {PasswordColumn}, {AvailableColumn}, {ComputerNameColumn}) values ";
+                        $"({IdColumn}, {LoginColumn}, {PasswordColumn}, {AvailableColumn}, {ComputerNameColumn}, '{CenterOwnerColumn}') values ";
             for (int index = 0; index < source.Count; index++)
             {
                 var account = source[index];
-                query += $"({account.Id}, '{account.Login}', '{account.Password}', {account.Available.ToInt()}, '{account.ComputerName}')";
+                query += $"({account.Id}, '{account.Login}', '{account.Password}', {account.Available.ToInt()}, '{account.ComputerName}', '{account.CenterOwner}')";
                 _allCount++;
                 _availableCount++;
                 if (index != (source.Count - 1)) query += ", ";
