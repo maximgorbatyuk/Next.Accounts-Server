@@ -23,7 +23,7 @@ namespace Next.Accounts_Server.Web_Space
         private string _prefix;
         private bool _activeStatement = false;
 
-        public HttpServer(IHttpProcessor processor, IEventListener eventListener, string url = "http://*:8082/", int count = 5)
+        public HttpServer(IHttpProcessor processor, IEventListener eventListener, string url = "http://+:8082/", int count = 5)
         {
             
             _processor = processor;

@@ -80,7 +80,7 @@ namespace Next.Accounts_Server
                 UsedTracker = _usedTracker
             };
             _server?.Close();
-            var url = $"http://*:{_settings.Port}/";
+            var url = $"http://+:{_settings.Port}/";
             _server = new HttpServer(clientProcessor, this, url);
             CheckUsedAccounts();
             StartListenButton_OnClick(this, null);
