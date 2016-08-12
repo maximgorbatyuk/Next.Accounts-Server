@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows.Threading;
-using Next.Accounts_Client.Web_Space;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
+using Next.Accounts_Server.Web_Space;
 using Next.Accounts_Server.Web_Space.Model;
 
 namespace Next.Accounts_Client.Controllers.Realize_Classes

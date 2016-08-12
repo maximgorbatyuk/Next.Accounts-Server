@@ -102,8 +102,8 @@
     <Compile Include="Controllers\Interfaces\IUsedTracker.cs" />
     <Compile Include="Database_Namespace\IDatabaseListener.cs" />
     <Compile Include="Database_Namespace\IRemoteStorage.cs" />
-    <Compile Include="Database_Namespace\LiteDatabase.cs" />
-    <Compile Include="Database_Namespace\PostgresDatabase.cs" />
+    <Compile Include="Database_Namespace\Realize_Classes\LiteDatabase.cs" />
+    <Compile Include="Database_Namespace\Realize_Classes\PostgresDatabase.cs" />
     <Compile Include="Extensions\CollectionExtensions.cs" />
     <Compile Include="Extensions\JsonExtensions.cs" />
     <Compile Include="Database_Namespace\IDatabase.cs" />
@@ -112,16 +112,20 @@
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\HttpRequest.cs" />
     <Compile Include="Models\Settings.cs" />
-    <Compile Include="Web_Space\HttpClientResponder.cs" />
-    <Compile Include="Web_Space\Interfaces\ITcpListener.cs" />
+    <Compile Include="Web_Space\IServerSpeaker.cs" />
+    <Compile Include="Web_Space\Realize_Classes\DefaultServerSpeaker.cs" />
+    <Compile Include="Web_Space\Realize_Classes\HttpClientResponder.cs" />
+    <Compile Include="Web_Space\IRequestSender.cs" />
+    <Compile Include="Web_Space\IResponseListener.cs" />
     <Compile Include="Web_Space\Model\ApiMessage.cs" />
     <Compile Include="Models\Sender.cs" />
-    <Compile Include="Web_Space\Interfaces\IHttpProcessor.cs" />
-    <Compile Include="Web_Space\HttpServer.cs" />
+    <Compile Include="Web_Space\IHttpProcessor.cs" />
+    <Compile Include="Web_Space\Realize_Classes\HttpServer.cs" />
     <Compile Include="Web_Space\Model\ApiRequests.cs" />
     <Compile Include="Views\SettingsWindows.xaml.cs">
       <DependentUpon>SettingsWindows.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Web_Space\Realize_Classes\WebClientController.cs" />
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Database_Namespace;
+using Next.Accounts_Server.Database_Namespace.Realize_Classes;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
 
@@ -86,7 +87,7 @@ namespace Next.Accounts_Server.Windows
             if (accounts == null) return;
 
             var restored = await _database.RestoreAccounts(accounts);
-            OnMessage($"Restored {restored} of accounts");
+            OnEvent($"Restored {restored} of accounts");
         }
 
         public void OnException(Exception ex)
@@ -94,7 +95,7 @@ namespace Next.Accounts_Server.Windows
             MessageBox.Show(ex.Message);
         }
 
-        public void OnMessage(string message)
+        public void OnEvent(string message, object sender = null)
         {
             MessageBox.Show(message);
         }

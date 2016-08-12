@@ -7,7 +7,7 @@ namespace Next.Accounts_Server.Application_Space
     {
         void OnException(Exception ex);
 
-        void OnMessage(string message);
+        void OnEvent(string message, object sender = null);
 
         
     }

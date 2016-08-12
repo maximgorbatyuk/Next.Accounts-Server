@@ -45,6 +45,8 @@ namespace Next.Accounts_Server.Application_Space
 
         public static readonly string HtmlPageFilename = "infopage.html";
 
+        
+
         public static IEnumerable<IPAddress> GetAddresses()
         {
             var me = Dns.GetHostName();

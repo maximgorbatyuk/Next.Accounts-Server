@@ -10,26 +10,28 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Next.Accounts_Client.App_data;
+using Next.Accounts_Client.Application_Space;
 using Next.Accounts_Client.Controllers;
 using Next.Accounts_Client.Controllers.Realize_Classes;
-using Next.Accounts_Client.Web_Space;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
+using Next.Accounts_Server.Web_Space;
 using Next.Accounts_Server.Web_Space.Model;
+using IResponseListener = Next.Accounts_Server.Web_Space.IResponseListener;
+using Next.Accounts_Server.Web_Space.Realize_Classes;
 
 namespace Next.Accounts_Client
 {
-    public partial class Form1 : Form, IListener, ITrackerListener, IResponseListener
+    public partial class Form1 : Form, IEventListener, ITrackerListener, IResponseListener
     {
         private IRequestSender _requestSender;
         private IProcessLauncher _processLauncher;
         private ProcessTracker _processTracker;
         private IUsingTracker _usingTracker;
         private ILogger _logger;
-        private App_data.Settings _settings;
+        private ClientSettings _clientSettings;
         private Sender _sender;
         private Account _account = null;
         private readonly string[] _arguments = null;
@@ -49,18 +51,18 @@ namespace Next.Accounts_Client
             var stringSettings = await IoController.ReadFileAsync(Const.SettingsFilename);
             if (stringSettings == null)
             {
-                _settings = new App_data.Settings();
-                await IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
+                _clientSettings = new ClientSettings();
+                await IoController.WriteToFileAsync(Const.SettingsFilename, _clientSettings.ToJson());
             }
-            else { _settings = stringSettings.ParseJson<App_data.Settings>(); }
+            else { _clientSettings = stringSettings.ParseJson<ClientSettings>(); }
 
 
             _sender = Const.GetSender(Assembly.GetExecutingAssembly().GetName().Version.ToString());
             _logger = new DefaultLogger();
             
-            _requestSender = new WebClientController(this, this, _settings.IpAddress);
+            _requestSender = new WebClientController(this, this, _clientSettings.IpAddress);
             _processLauncher = new DefaultProcessLauncher(this);
-            _processTracker = new ProcessTracker(_settings)
+            _processTracker = new ProcessTracker(_clientSettings)
             {
                 EventListener = this,
                 ProcessLauncher = _processLauncher,
@@ -106,6 +108,11 @@ namespace Next.Accounts_Client
             _logger.LogError(ex.Message);
         }
 
+        public void OnEvent(string message)
+        {
+            throw new NotImplementedException();
+        }
+
         private void button2_Click(object sender, EventArgs e) => ReleaseAccount();
 
         private async void ReleaseAccount()
@@ -138,7 +145,7 @@ namespace Next.Accounts_Client
         {
             var info = new ProcessStartInfo
             {
-                FileName = _settings.SteamDirectory,
+                FileName = _clientSettings.SteamDirectory,
                 Arguments = $"-applaunch {applicationCode} -login {account.Login} {account.Password}"
             };
             var result = _processLauncher.StartProcess(info);
@@ -172,7 +179,7 @@ namespace Next.Accounts_Client
             if (apiResponse == null)
             {
                 DisplayText($"Received null apiResponse: {responseString}");
-                DisplayInMainlabel(_settings.BadConnectionMessage);
+                DisplayInMainlabel(_clientSettings.BadConnectionMessage);
                 _badConnectionOrDenied = true;
                 return;
             }
@@ -185,7 +192,7 @@ namespace Next.Accounts_Client
                 _badConnectionOrDenied = true;
                 if (requestType == ApiRequests.GetAccount)
                 {
-                    DisplayInMainlabel(_settings.NoAvailableAccountsMessage);
+                    DisplayInMainlabel(_clientSettings.NoAvailableAccountsMessage);
                 }
                 return;
             }
@@ -200,7 +207,7 @@ namespace Next.Accounts_Client
                     account = jsonObject?.ParseJson<Account>();
                     _account = account;
                     displayMessage = account != null ? $"Account {_account} received. Sender {sender}" : $"null account data";
-                    DisplayInMainlabel(_settings.OkayMessage);
+                    DisplayInMainlabel(_clientSettings.OkayMessage);
                     _usingTracker.SetAccount(_account);
                     // Launch steam if an account has been received
                     LaunchSteam(_account, _gameCode);
@@ -213,7 +220,7 @@ namespace Next.Accounts_Client
                     displayMessage = account != null ?
                         $"Account {account} has been released. Sender {sender}" :
                         $"null account data while ReleaseAccount processing";
-                    DisplayInMainlabel(_settings.ReleasedMessage);
+                    DisplayInMainlabel(_clientSettings.ReleasedMessage);
                     _usingTracker.ClearAccount();
                     // Closing the application if the account has been released
                     CloseApplication();
@@ -242,7 +249,7 @@ namespace Next.Accounts_Client
 
         public void OnConnectionError(Exception ex)
         {
-            DisplayInMainlabel(_settings.BadConnectionMessage);
+            DisplayInMainlabel(_clientSettings.BadConnectionMessage);
             StopProgressBar();
             OkButton.Enabled = true;
             _badConnectionOrDenied = true;
@@ -275,7 +282,7 @@ namespace Next.Accounts_Client
         private void Form1_Shown(object sender, EventArgs e)
         {
             OkButton.Enabled = false;
-            _processLauncher?.CloseProcesses(_settings?.ProcessName);
+            _processLauncher?.CloseProcesses(_clientSettings?.ProcessName);
             _gameCode = _arguments != null && _arguments.Length == 2 ? _arguments[0] : "0";
             var title = _arguments != null && _arguments.Length == 2 ? _arguments[1] : "Steam launcher";
             this.Text = title;
@@ -304,14 +311,14 @@ namespace Next.Accounts_Client
             if (reason == CloseReason.WindowsShutDown || _badConnectionOrDenied)
             {
                 if (_account != null) ReleaseAccount();
-                _processLauncher.CloseProcesses(_settings.ProcessName);
+                _processLauncher.CloseProcesses(_clientSettings.ProcessName);
                 return;
             }
             if (reason == CloseReason.ApplicationExitCall)
             {
                 if (_account == null)
                 {
-                    _processLauncher.CloseProcesses(_settings.ProcessName);
+                    _processLauncher.CloseProcesses(_clientSettings.ProcessName);
                     return;
                 }
             }

@@ -1,6 +1,6 @@
-﻿namespace Next.Accounts_Client.App_data
+﻿namespace Next.Accounts_Client.Application_Space
 {
-    public class Settings
+    public class ClientSettings
     {
         public string OkayMessage { get; set; } = "Данные аккаунта приняты. Запускаю Steam";
 

@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using Next.Accounts_Server.Application_Space;
-using Next.Accounts_Server.Extensions;
-using Next.Accounts_Server.Web_Space.Interfaces;
 
-namespace Next.Accounts_Server.Web_Space
+namespace Next.Accounts_Server.Web_Space.Realize_Classes
 {
     public class HttpServer
     {
@@ -57,7 +51,7 @@ namespace Next.Accounts_Server.Web_Space
                     var username = Environment.GetEnvironmentVariable("USERNAME");
                     var userdomain = Environment.GetEnvironmentVariable("USERDOMAIN");
                     // netsh http add urlacl url=http://*:9669/ user=fak listen=yes
-                    _eventListener.OnMessage(
+                    _eventListener.OnEvent(
                         $"netsh http add urlacl url={_url} user={userdomain}\\{username} listen=yes");
                 }
                 _eventListener.OnException(ex);
@@ -72,7 +66,7 @@ namespace Next.Accounts_Server.Web_Space
                 _threads.Add(thread);
                 thread.Start();
             }
-            _eventListener.OnMessage("Listenning started");
+            _eventListener.OnEvent("Listenning started");
         }
 
         public void Close()
@@ -85,7 +79,7 @@ namespace Next.Accounts_Server.Web_Space
                 thread.Abort();
             }
             _threads = null;
-            _eventListener.OnMessage("Listenning stopped");
+            _eventListener.OnEvent("Listenning stopped");
         }
 
         public void Listenning()

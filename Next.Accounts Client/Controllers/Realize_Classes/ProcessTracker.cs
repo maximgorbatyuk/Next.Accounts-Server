@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Windows.Threading;
-using Next.Accounts_Client.Web_Space;
+using Next.Accounts_Client.Application_Space;
+using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Models;
 
 namespace Next.Accounts_Client.Controllers.Realize_Classes
@@ -11,19 +12,19 @@ namespace Next.Accounts_Client.Controllers.Realize_Classes
 
         public ITrackerListener TrackerListener { get; set; }
 
-        public IListener EventListener { get; set; }
+        public IEventListener EventListener { get; set; }
 
         public IProcessLauncher ProcessLauncher { get; set; }
 
-        private App_data.Settings _settings;
+        private ClientSettings _clientSettings;
 
         private bool _hasBeenLaunched = false;
 
         private DispatcherTimer _timer;
 
-        public ProcessTracker(App_data.Settings settings)
+        public ProcessTracker(ClientSettings clientSettings)
         {
-            _settings = settings;
+            _clientSettings = clientSettings;
             _timer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(2)};
             _timer.Tick += TimerOnTick;
             _timer.Start();
@@ -35,7 +36,7 @@ namespace Next.Accounts_Client.Controllers.Realize_Classes
 
         private void TimerOnTick(object sender, EventArgs eventArgs)
         {
-            var launched = ProcessLauncher.IsActive(_settings.ProcessName);
+            var launched = ProcessLauncher.IsActive(_clientSettings.ProcessName);
             if (launched && !_hasBeenLaunched)
             {
                 _hasBeenLaunched = true;

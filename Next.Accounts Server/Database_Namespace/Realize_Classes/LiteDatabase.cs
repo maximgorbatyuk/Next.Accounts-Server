@@ -9,17 +9,14 @@ using System.Threading.Tasks;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
-using static Next.Accounts_Server.Application_Space.Const;
 
-namespace Next.Accounts_Server.Database_Namespace
+namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
 {
     public class LiteDatabase : IDisposable, IDatabase
     {
         public string DatabaseName { get; set; } = "SteamAccounts.db3";
 
         private string _accountTableName = "steam_accounts";
-
-        private readonly string _connectionString;
 
         private readonly SQLiteConnection _connection;
 
@@ -38,8 +35,8 @@ namespace Next.Accounts_Server.Database_Namespace
             DatabaseName = dbName ?? DatabaseName;
             InitDirectories();
             var path = $"{Environment.CurrentDirectory}\\App_data\\{DatabaseName}";
-            _connectionString = $"Data Source = {path}; Version=3;";
-            _connection = new SQLiteConnection { ConnectionString = _connectionString };
+            string connectionString = $"Data Source = {path}; Version=3;";
+            _connection = new SQLiteConnection { ConnectionString = connectionString };
             if (!File.Exists(path)) SQLiteConnection.CreateFile(DatabaseName);
             if (_connection.State == ConnectionState.Open) _connection.Close();
             InitiateTables();
@@ -63,12 +60,12 @@ namespace Next.Accounts_Server.Database_Namespace
 //            await ExecuteNonQueryAsync(query);
 
             var query = $"CREATE TABLE IF NOT EXISTS {_accountTableName} (" +
-                        $"{IdColumn} INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        $"{LoginColumn} TEXT," +
-                        $"{PasswordColumn} TEXT," +
-                        $"{AvailableColumn} INTEGER," +
-                        $"{ComputerNameColumn} TEXT, " +
-                        $"{CenterOwnerColumn} TEXT)";
+                        $"{Const.IdColumn} INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        $"{Const.LoginColumn} TEXT," +
+                        $"{Const.PasswordColumn} TEXT," +
+                        $"{Const.AvailableColumn} INTEGER," +
+                        $"{Const.ComputerNameColumn} TEXT, " +
+                        $"{Const.CenterOwnerColumn} TEXT)";
             var result = await ExecuteNonQueryAsync(query);
             Debug.WriteIf(result > 0, "Инициирована база аккаунтов");
         }
@@ -125,7 +122,7 @@ namespace Next.Accounts_Server.Database_Namespace
         }
 
         public async Task<int> DeleteAccountsTable() => 
-            await ExecuteNonQueryAsync($"delete from {_accountTableName} where {IdColumn}>0");
+            await ExecuteNonQueryAsync($"delete from {_accountTableName} where {Const.IdColumn}>0");
 
         public void Dispose()
         {
@@ -146,7 +143,7 @@ namespace Next.Accounts_Server.Database_Namespace
             account = accounts.GetRandomAccount();
             if (account == null) return null;
             account.Available = false;
-            account.ComputerName = sender != null ? sender.Name : NoComputer;
+            account.ComputerName = sender != null ? sender.Name : Const.NoComputer;
             _availableCount = accounts.Count(a => a.Available == true);
             _allCount = accounts.Count;
             _dbListener.UpdateAccountCount(_allCount, _availableCount);
@@ -168,9 +165,9 @@ namespace Next.Accounts_Server.Database_Namespace
         {
             var query = $"UPDATE {_accountTableName} " +
                         $"SET " +
-                        $"{AvailableColumn}={account.Available.ToInt()}, " +
-                        $"{ComputerNameColumn}='{account.ComputerName}' " +
-                        $"WHERE {IdColumn}={account.Id}";
+                        $"{Const.AvailableColumn}={account.Available.ToInt()}, " +
+                        $"{Const.ComputerNameColumn}='{account.ComputerName}' " +
+                        $"WHERE {Const.IdColumn}={account.Id}";
             return await ExecuteNonQueryAsync(query);
         }
 
@@ -185,7 +182,15 @@ namespace Next.Accounts_Server.Database_Namespace
             return count;
         }
 
-        public async Task<List<Account>> GetAccounts(bool all = true)
+
+        public async Task<List<Account>> GetUsedAccounts()
+        {
+            var account = await GetAccounts();
+            account = account.Where(a => a.Available == false).ToList();
+            return account;
+        }
+
+        public async Task<List<Account>> GetAccounts(bool availableOnly = false)
         {
             //var query = all ? $"SELECT * FROM {_accountTableName}" : $"SELECT * FROM {_accountTableName} WHERE {AvailableColumn}=0";
             var query = $"SELECT * FROM {_accountTableName}";
@@ -196,12 +201,12 @@ namespace Next.Accounts_Server.Database_Namespace
             accounts = new List<Account>();
             foreach (DataRow row in dt.Rows)
             {
-                int id          = int.Parse(row[IdColumn].ToString());
-                var login       = row[LoginColumn].ToString();
-                var pass        = row[PasswordColumn].ToString();
-                bool available  = int.Parse(row[AvailableColumn].ToString()) == 1;
-                var computerName = row[ComputerNameColumn].ToString();
-                var owner = row[CenterOwnerColumn].ToString();
+                int id          = int.Parse(row[Const.IdColumn].ToString());
+                var login       = row[Const.LoginColumn].ToString();
+                var pass        = row[Const.PasswordColumn].ToString();
+                bool available  = int.Parse(row[Const.AvailableColumn].ToString()) == 1;
+                var computerName = row[Const.ComputerNameColumn].ToString();
+                var owner = row[Const.CenterOwnerColumn].ToString();
                 accounts.Add(new Account
                 {
                     Id = id,
@@ -215,20 +220,25 @@ namespace Next.Accounts_Server.Database_Namespace
             _allCount = accounts.Count;
             _availableCount = accounts.Count(a => a.Available == true);
 
-            accounts = all ? accounts : accounts.Where(a => a.Available == false).ToList();
+            accounts = !availableOnly ? accounts : accounts.Where(a => a.Available == true).ToList();
             _dbListener.UpdateAccountCount(_allCount, _availableCount);
             return accounts;
         }
 
         public async Task<int> AddAccountAsync(IList<Account> source)
         {
-            if (source.Count == 0) return 0;
+            if (source == null || source.Count == 0) return 0;
             var query = $"replace into {_accountTableName} " +
-                        $"({IdColumn}, {LoginColumn}, {PasswordColumn}, {AvailableColumn}, {ComputerNameColumn}, '{CenterOwnerColumn}') values ";
+                        $"({Const.IdColumn}, {Const.LoginColumn}, {Const.PasswordColumn}, {Const.AvailableColumn}, {Const.ComputerNameColumn}, '{Const.CenterOwnerColumn}') values ";
             for (int index = 0; index < source.Count; index++)
             {
                 var account = source[index];
-                query += $"({account.Id}, '{account.Login}', '{account.Password}', {account.Available.ToInt()}, '{account.ComputerName}', '{account.CenterOwner}')";
+                query += $"({account.Id}, " +
+                         $"'{account.Login}', " +
+                         $"'{account.Password}', " +
+                         $"{account.Available.ToInt()}, " +
+                         $"'{account.ComputerName}', " +
+                         $"'{account.CenterOwner}')";
                 _allCount++;
                 _availableCount++;
                 if (index != (source.Count - 1)) query += ", ";
@@ -247,7 +257,7 @@ namespace Next.Accounts_Server.Database_Namespace
 
         public async Task<int> RemoveAccountAsync(Account account)
         {
-            var query = $"delete from {_accountTableName} where {IdColumn}={account.Id}";
+            var query = $"delete from {_accountTableName} where {Const.IdColumn}={account.Id}";
             var result = await ExecuteNonQueryAsync(query);
             _allCount--;
             _availableCount--;

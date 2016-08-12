@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
+using Next.Accounts_Server.Application_Space;
 
 namespace Next.Accounts_Client.Controllers.Realize_Classes
 {
     public class DefaultProcessLauncher : IProcessLauncher
     {
-        private readonly IListener _listener;
+        private readonly IEventListener _listener;
 
-        public DefaultProcessLauncher(IListener listener)
+        public DefaultProcessLauncher(IEventListener listener)
         {
             _listener = listener;
         }

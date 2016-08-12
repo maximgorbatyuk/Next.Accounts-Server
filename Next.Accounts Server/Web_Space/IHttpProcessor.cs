@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Next.Accounts_Server.Web_Space.Interfaces
+namespace Next.Accounts_Server.Web_Space
 {
     public interface IHttpProcessor
     {

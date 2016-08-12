@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Next.Accounts_Server.Application_Space;
+using Next.Accounts_Server.Controllers;
 
 namespace Next.Accounts_Client
 {
@@ -34,18 +36,25 @@ namespace Next.Accounts_Client
         [STAThread]
         static void Main(string[] args)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            bool created;
-            _mutex = new Mutex(true, "next-kz-steam-tracker", out created);
-            if (!created)
+            try
             {
-                IntPtr hWnd = FindWindow(null, "steam");
-                if (IsIonoc(hWnd)) ShowWindow(hWnd, 9);
-                else SetForegroundWindow(hWnd);
-                return;
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                bool created;
+                _mutex = new Mutex(true, "next-kz-steam-tracker", out created);
+                if (!created)
+                {
+                    IntPtr hWnd = FindWindow(null, "steam");
+                    if (IsIonoc(hWnd)) ShowWindow(hWnd, 9);
+                    else SetForegroundWindow(hWnd);
+                    return;
+                }
+                Application.Run(new Form1(args));
             }
-            Application.Run(new Form1(args));
+            catch (Exception ex)
+            {
+                Application.Exit();
+            }
         }
     }
 }

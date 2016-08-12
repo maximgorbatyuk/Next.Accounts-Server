@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Models;
 using Npgsql;
 
-namespace Next.Accounts_Server.Database_Namespace
+namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
 {
     public class PostgresDatabase : IRemoteStorage
     {
@@ -40,24 +39,30 @@ namespace Next.Accounts_Server.Database_Namespace
 
             foreach (DataRow row in dt.Rows)
             {
-                var id = int.Parse(row[0].ToString());
-                var userName = row[1].ToString();
-                var userPassword = row[2].ToString();
-                var availability = int.Parse(row[3].ToString()) == 1;
-                var centerName = row[4].ToString();
-                var account = new Account
-                {
-                    Id = id,
-                    Login = userName,
-                    Password = userPassword,
-                    Available = availability,
-                    CenterOwner = centerName,
-                    ComputerName = ""
-                };
+                var account = RowToAccount(row);
                 result.Add(account);
             }
 
             return result;
+        }
+
+        private Account RowToAccount(DataRow row)
+        {
+            var id              = int.Parse(row[0].ToString());
+            var userName        = row[1].ToString();
+            var userPassword    = row[2].ToString();
+            var availability    = int.Parse(row[3].ToString()) == 1;
+            var centerName      = row[4].ToString();
+            var account         = new Account
+            {
+                Id = id,
+                Login = userName,
+                Password = userPassword,
+                Available = availability,
+                CenterOwner = centerName,
+                ComputerName = ""
+            };
+            return account;
         }
 
         public async Task<bool> CheckConnection()

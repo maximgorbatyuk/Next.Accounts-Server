@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
-using Next.Accounts_Client;
-using Next.Accounts_Client.Controllers;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Extensions;
+using Next.Accounts_Server.Web_Space.Model;
 
-namespace Next.Accounts_Client.Web_Space
+namespace Next.Accounts_Server.Web_Space.Realize_Classes
 {
     public class WebClientController : IRequestSender
     {
-        private WebClient _client;
+        private readonly WebClient _client;
 
-        private IListener _listener;
+        private readonly IEventListener _listener;
 
-        private IResponseListener _responseListener;
+        private readonly IResponseListener _responseListener;
 
-        private App_data.Settings _settings;
+        //private  CLientSettings _settings;
 
         private string _url;
 
-        public WebClientController(IListener listener, IResponseListener responseListener, string url = @"http://localhost:8082")
+        public WebClientController(IEventListener listener, IResponseListener responseListener, string url = @"http://localhost:8082")
         {
             _listener = listener;
             _responseListener = responseListener;
@@ -34,7 +33,7 @@ namespace Next.Accounts_Client.Web_Space
             _listener.OnEvent(response);
         }
 
-        public async Task<bool> SendPostDataAsync(Accounts_Server.Web_Space.Model.ApiMessage message)
+        public async Task<bool> SendPostDataAsync(ApiMessage message)
         {
             var toSend = message.ToJson();
             _client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";

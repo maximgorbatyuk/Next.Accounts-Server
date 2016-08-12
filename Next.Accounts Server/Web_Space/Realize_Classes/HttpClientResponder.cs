@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -11,10 +10,9 @@ using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Database_Namespace;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
-using Next.Accounts_Server.Web_Space.Interfaces;
 using Next.Accounts_Server.Web_Space.Model;
 
-namespace Next.Accounts_Server.Web_Space
+namespace Next.Accounts_Server.Web_Space.Realize_Classes
 {
     public class HttpClientResponder : IHttpProcessor, IDisposable
     {
@@ -53,7 +51,7 @@ namespace Next.Accounts_Server.Web_Space
                 Database.ReleaseAccount(account);
                 text += $"{index + 1}) account {account})\r\n";
             }
-            EventListener.OnMessage(text);
+            EventListener.OnEvent(text);
         }
 
 
@@ -92,7 +90,7 @@ namespace Next.Accounts_Server.Web_Space
                 var html = await GetHtmlPage(context) ??
                            "<h1>Infopage.html does not exists</h1><h2>Load it from github</h2>";
                 CloseHttpContext(context, html, contentType: "text/html");
-                EventListener.OnMessage("GET request has been processed");
+                EventListener.OnEvent("GET request has been processed");
             }
         }
 
@@ -246,7 +244,7 @@ namespace Next.Accounts_Server.Web_Space
                     response = null;
                     break;
             }
-            if (messageToDisplay != null) EventListener.OnMessage(messageToDisplay);
+            if (messageToDisplay != null) EventListener.OnEvent(messageToDisplay);
             return response;
         }
 
@@ -263,7 +261,7 @@ namespace Next.Accounts_Server.Web_Space
             var buffer = response.ToBuffer();
             context.Response.ContentLength64 = buffer.Length;
             context.Response.StatusCode = (int) code;
-            //EventListener.OnMessage($"Processed client: " +
+            //EventListener.OnEvent($"Processed client: " +
             //                         $"{context.Request.LocalEndPoint?.Address}:{context.Request.LocalEndPoint?.Port}");
             try
             {

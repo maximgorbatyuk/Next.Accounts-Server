@@ -9,10 +9,12 @@ using System.Windows.Media;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Database_Namespace;
+using Next.Accounts_Server.Database_Namespace.Realize_Classes;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
 using Next.Accounts_Server.Timers;
 using Next.Accounts_Server.Web_Space;
+using Next.Accounts_Server.Web_Space.Realize_Classes;
 using Next.Accounts_Server.Windows;
 
 namespace Next.Accounts_Server
@@ -20,16 +22,22 @@ namespace Next.Accounts_Server
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IEventListener, IDatabaseListener, ISettingsChangedListener, ITimeListener
+    public partial class MainWindow : Window, IEventListener, IDatabaseListener, ISettingsChangedListener, ITimeListener, IResponseListener
     {
 
         private HttpServer _server;
         private LiteDatabase _database;
         private Settings _settings;
-        private IUsedTracker _usedTracker;
         private bool _firstLaunch = true;
         private WorkTimer _workTimer;
+        private Sender _me;
+
+        private IUsedTracker _usedTracker;
+        private IServerSpeaker _serverSpeaker;
         private ILogger _logger;
+        private IRequestSender _requestSender;
+
+        
         ///private TcpServer _tcpServer;
 
         public MainWindow()
@@ -40,6 +48,7 @@ namespace Next.Accounts_Server
             _workTimer = new WorkTimer(this);
             var version = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
             VersionLabel.Content = version;
+            TestDatabase();
             //AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
         }
 
@@ -53,7 +62,7 @@ namespace Next.Accounts_Server
         private async void CheckUsedAccounts()
         {
             if (!_firstLaunch) return;
-            var used = await _database.GetAccounts(false);
+            var used = await _database.GetUsedAccounts();
             if (used?.Count == 0) return;
 
             _usedTracker.AddAccount(used);
@@ -68,17 +77,21 @@ namespace Next.Accounts_Server
             if (s != null) _settings = s;
             else _settings = await LoadOrGetDefault();
 
-            _logger = new DefaultLogger();
-            _database = new LiteDatabase(this, this, _settings.DatabaseName);
+            _me             = Const.GetSender(client: false);
+            _logger         = new DefaultLogger();
+            _requestSender  = new WebClientController(listener: this, responseListener: this);
+            _database       = new LiteDatabase(listener: this, dbListener: this, dbName: _settings.DatabaseName);
+            _serverSpeaker  = new DefaultServerSpeaker(_settings, _database, _requestSender);
+            _usedTracker    = new DefaultUsedTracker( _settings.UsedMinuteLimit);
 
-            var me = Const.GetSender(client: false);
-            _usedTracker = new DefaultUsedTracker( _settings.UsedMinuteLimit);
-            var clientProcessor = new HttpClientResponder(me, _settings)
+
+            var clientProcessor = new HttpClientResponder(_me, _settings)
             {
                 Database = _database,
                 EventListener = this,
                 UsedTracker = _usedTracker
             };
+
             _server?.Close();
             var url = $"http://+:{_settings.Port}/";
             _server = new HttpServer(clientProcessor, this, url);
@@ -105,7 +118,7 @@ namespace Next.Accounts_Server
         private void DisplayIpAddresses()
         {
             var addresses = Const.GetAddresses().ToList();
-            var main = addresses.FirstOrDefault(a => a.ToString().Contains("192.168.1."));
+            var main = addresses.FirstOrDefault(a => a.ToString().Contains("192.168.1.") || a.ToString().Contains("10.5.8."));
             var text = addresses.Aggregate("Available IP addresses:\r\n", (current, ip) => current + $"{ip.ToString()}\r\n");
             
             if (main != null) AddressLabel.Content = main;
@@ -114,7 +127,8 @@ namespace Next.Accounts_Server
 
         private void DisplayText(string text)
         {
-            LogTextBox.Dispatcher.InvokeAsync(() => LogTextBox.Text += $"{text}\n");
+            var time = DateTime.Now;
+            LogTextBox.Dispatcher.InvokeAsync(() => LogTextBox.Text += $"[{time}] {text}\n");
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -140,12 +154,13 @@ namespace Next.Accounts_Server
 
         public void OnException(Exception ex)
         {
-            var text = $"Exception catched:\nStack: {ex.StackTrace}\nMessage: {ex.Message}";
+            var text = $"Exception catched:\r\nMessage: {ex.Message}\r\nStack: {ex.StackTrace}";
             DisplayText(text);
             _logger.LogError(ex.Message);
         }
 
-        public void OnMessage(string message)
+
+        public void OnEvent(string message, object sender = null)
         {
             DisplayText(message);
             _logger.Log(message);
@@ -165,15 +180,8 @@ namespace Next.Accounts_Server
 
         private async void TestDatabase()
         {
-            if (_database == null) return;
-            var accounts = await _database.GetAccounts();
-            DisplayText($"Got {accounts.Count} of accounts");
-            foreach (var a in accounts)
-            {
-                a.Available = false;
-            }
-            var count = await _database.UpdateAccountAsync(accounts);
-            DisplayText($"Updated {count} rows");
+            while (_serverSpeaker == null) { await Task.Delay(100); }
+            var resp = await _serverSpeaker.CreateResponseForRequester( _me, null);
         }
 
         private void OpenSettingsButton_OnClick(object sender, RoutedEventArgs e)
@@ -207,6 +215,16 @@ namespace Next.Accounts_Server
         {
             string url = "https://github.com/maximgorbatyuk/Next.Accounts-Server";
             Process.Start(url);
+        }
+
+        public void OnServerResponse(string responseString)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnConnectionError(Exception ex)
+        {
+            throw new NotImplementedException();
         }
     }
 }
