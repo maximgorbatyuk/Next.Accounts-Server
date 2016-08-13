@@ -79,7 +79,7 @@ namespace Next.Accounts_Server
             if (s != null) _settings = s;
             else _settings = await LoadOrGetDefault();
 
-            _me             = Const.GetSender(client: false);
+            _me             = Const.GetSender(name: _settings.CenterName, client: false);
             _logger         = new DefaultLogger();
             _requestSender  = new WebClientController(listener: this, responseListener: this);
             _database       = new LiteDatabase(listener: this, dbListener: this, dbName: _settings.DatabaseName);
@@ -157,7 +157,7 @@ namespace Next.Accounts_Server
 
         public void OnException(Exception ex)
         {
-            var text = $"Exception catched:\r\nMessage: {ex.Message}\r\nStack: {ex.StackTrace}";
+            var text = $"Exception catched:\r\nMessage: {ex.Message}";
             DisplayText(text);
             _logger.LogError(ex.Message);
         }
@@ -211,6 +211,7 @@ namespace Next.Accounts_Server
         private void LogTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             LogTextBox.ScrollToEnd();
+            if (LogTextBox.Text.Length == 0) return;
             LogTextBox.CaretIndex = LogTextBox.Text.Length - 1;
         }
 
@@ -250,6 +251,11 @@ namespace Next.Accounts_Server
         public void OnConnectionError(Exception ex)
         {
             DisplayText($"Could not connect to other servers. Exception: {ex.Message}");
+        }
+
+        private void ClearTextBoxMenu_OnClick(object sender, RoutedEventArgs e)
+        {
+            LogTextBox.Text = "";
         }
     }
 }

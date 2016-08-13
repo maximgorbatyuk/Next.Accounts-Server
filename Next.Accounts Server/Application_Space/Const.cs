@@ -79,7 +79,7 @@ namespace Next.Accounts_Server.Application_Space
             return result;
         }
 
-        public static Sender GetSender(string version = null, bool client = true)
+        public static Sender GetSender(string name = null,  string version = null, bool client = true)
         {
             if (version == null) version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var ip = Const.GetAddresses().SingleOrDefault(a => a.ToString().Contains("192.168.1."));
@@ -89,7 +89,7 @@ namespace Next.Accounts_Server.Application_Space
                 AppVersion = version,
                 AppType = client ? Const.ClientAppType : Const.ServerAppType,
                 IpAddress = stringIp,
-                Name = Environment.MachineName
+                Name = name ?? Environment.MachineName
             };
             return sender;
         }

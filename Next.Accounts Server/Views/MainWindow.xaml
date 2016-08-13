@@ -20,6 +20,7 @@
             <MenuItem Header="Program" Height="29">
                 <MenuItem Header="Open settings" Name="OpenSettingsButton" Click="OpenSettingsButton_OnClick"/>
                 <MenuItem Header="Open folder" Name="OpenFolderButton" Click="OpenFolderButton_OnClick"/>
+                <MenuItem Header="Clear text" Name="ClearTextBoxMenu" Click="ClearTextBoxMenu_OnClick"/>
             </MenuItem>
             <MenuItem Name="ServerMenuItem" Header="Server" Height="29">
                 <MenuItem Header="Start listenning" Name="StartListenButton" Click="StartListenButton_OnClick"/>
