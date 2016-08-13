@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -14,6 +15,7 @@ using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
 using Next.Accounts_Server.Timers;
 using Next.Accounts_Server.Web_Space;
+using Next.Accounts_Server.Web_Space.Model;
 using Next.Accounts_Server.Web_Space.Realize_Classes;
 using Next.Accounts_Server.Windows;
 
@@ -89,7 +91,8 @@ namespace Next.Accounts_Server
             {
                 Database = _database,
                 EventListener = this,
-                UsedTracker = _usedTracker
+                UsedTracker = _usedTracker,
+                ServerSpeaker = _serverSpeaker
             };
 
             _server?.Close();
@@ -180,8 +183,8 @@ namespace Next.Accounts_Server
 
         private async void TestDatabase()
         {
-            while (_serverSpeaker == null) { await Task.Delay(100); }
-            var resp = await _serverSpeaker.CreateResponseForRequester( _me, null);
+            //while (_serverSpeaker == null) { await Task.Delay(100); }
+            //var resp = await _serverSpeaker.CreateResponseForRequester( _me, null);
         }
 
         private void OpenSettingsButton_OnClick(object sender, RoutedEventArgs e)
@@ -217,14 +220,36 @@ namespace Next.Accounts_Server
             Process.Start(url);
         }
 
-        public void OnServerResponse(string responseString)
+        public async void OnServerResponse(string responseString)
         {
-            throw new NotImplementedException();
+            var api = responseString.ParseJson<ApiMessage>();
+            if (api == null) return;
+            var sender = api.JsonSender.ParseJson<Sender>();
+            if (sender == null)
+            {
+                DisplayText($"Got invalid api: {api}");
+                return;
+            }
+            if (sender.AppType != Const.ServerAppType) return;
+            string display = null;
+            if (api.Code == 200)
+            {
+                var accounts = api.JsonObject.ParseJson<List<Account>>();
+                await _database.AddAccountAsync(accounts);
+                display = $"Have got a {accounts.Count} of accounts from {sender}";
+            }
+            else
+            {
+                display = $"Server {sender} have no free accounts";
+            }
+            DisplayText(display);
+
+            
         }
 
         public void OnConnectionError(Exception ex)
         {
-            throw new NotImplementedException();
+            DisplayText($"Could not connect to other servers. Exception: {ex.Message}");
         }
     }
 }

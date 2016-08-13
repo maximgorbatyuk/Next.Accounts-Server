@@ -23,7 +23,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
         {
             _listener = listener;
             _responseListener = responseListener;
-            _url = url;
+            _url = FormatUrl(url);
+            
             _client = new WebClient();
         }
 
@@ -33,9 +34,17 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
             _listener.OnEvent(response);
         }
 
-        public async Task<bool> SendPostDataAsync(ApiMessage message)
+        private string FormatUrl(string url)
+        {
+            if (!url.Contains(":")) url = $"{url}:8082";
+            if (!url.Contains("http://")) url = $"http://{url}";
+            return url;
+        }
+
+        public async Task<bool> SendPostDataAsync(ApiMessage message, string url = null)
         {
             var toSend = message.ToJson();
+            _url = url != null ? FormatUrl(url) : _url;
             _client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
             try
             {

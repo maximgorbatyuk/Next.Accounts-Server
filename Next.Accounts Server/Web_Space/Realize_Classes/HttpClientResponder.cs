@@ -21,6 +21,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         public IDatabase Database { get; set; }
 
+        public IServerSpeaker ServerSpeaker { get; set; }
+
         private readonly DispatcherTimer _timer;
 
         public IUsedTracker UsedTracker { get; set; }
@@ -40,14 +42,14 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         private void UsedTrackerTimerTick(object sender, EventArgs eventArgs)
         {
-            var exspired = UsedTracker.ClearUpUsed();
+            var expired = UsedTracker.ClearUpUsed();
             UsedTracker.IncreaseTime();
-            if (exspired == null) return;
+            if (expired == null) return;
 
             var text = "Released next accounts with expired \"using\" time by server: \r\n";
-            for (int index = 0; index < exspired.Count; index++)
+            for (int index = 0; index < expired.Count; index++)
             {
-                var account = exspired[index];
+                var account = expired[index];
                 Database.ReleaseAccount(account);
                 text += $"{index + 1}) account {account})\r\n";
             }
@@ -57,7 +59,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         public async void OnRequestReceived(HttpListenerContext context)
         {
-            var sender = context.Request.UserHostAddress;
+            //var sender = context.Request.UserHostAddress;
             var request = new HttpRequest
             {
                 HttpMethod = context.Request.HttpMethod,
@@ -75,7 +77,18 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 request.PostData = new StreamReader(request.InputStream).ReadToEnd();
                 var apiMessage = request.PostData.ParseJson<ApiMessage>();
                 var requestType = Const.GetRequestType(apiMessage);
-                var response = await CreateHttpResponseAsync(requestType, request);
+                var sender = apiMessage.JsonSender.ParseJson<Sender>();
+                ApiMessage response = null;
+
+                if (sender?.AppType == Const.ClientAppType)
+                {
+                    response = await CreateHttpResponseAsync(requestType, request);
+                }
+                else if (sender?.AppType == Const.ServerAppType)
+                {
+                    response = await ServerSpeaker.CreateResponseForRequester(sender, _me, request);
+                }
+                
                 if (response != null)
                 {
                     CloseHttpContext(context, response);
@@ -182,6 +195,10 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                             UsedTracker.AddAccount(accountToSend);
                         }
                         messageToDisplay = $"Account {accountToSend} has been sent to {sender}";
+                    }
+                    if (accountToSend == null)
+                    {
+                        await ServerSpeaker.AskAccounts(_me);
                     }
                     break;
 

@@ -15,9 +15,10 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         private readonly IRequestSender _requestSender;
 
-        private Settings _settings;
+        private readonly Settings _settings;
 
-        private Dictionary<string, bool> _centersDictionary;
+        private readonly Dictionary<string, bool> _centersDictionary;
+
 
         public DefaultServerSpeaker(Settings settings, IDatabase database, IRequestSender requestSender)
         {
@@ -61,28 +62,47 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 RequestType = Const.RequestTypeGet,
                 StringMessage = "Give me accounts, please"
             };
-            var result = await _requestSender.SendPostDataAsync(request);
+            var result = await _requestSender.SendPostDataAsync(request, address);
             return result;
         }
 
-        public async Task<List<Account>> GetAccountForRequesterAsync(Sender requester, int count = 5)
+        public async Task<List<Account>> GetAccountForRequesterAsync(Sender requester, int count)
         {
             var accounts = await _database.GetAccounts(true);
+            if (accounts == null) return null;
             accounts = accounts.Take(count).ToList();
             foreach (var a in accounts)
             {
-                a.Available = false;
-                a.ComputerName = $"{requester.Name}({requester.AppType})";
-                await _database.UpdateAccountAsync(a);
+                await _database.RemoveAccountAsync(a);
+                //a.Available = false;
+                //a.ComputerName = $"{requester.Name}({requester.AppType})";
+                //await _database.UpdateAccountAsync(a);
             }
-            accounts.ForEach(a => a.Available = true);
+            //accounts.ForEach(a => a.Available = true);
             return accounts;
         }
 
-        public async Task<ApiMessage> CreateResponseForRequester(Sender requester, HttpRequest request, int count = 5)
+        public async Task<ApiMessage> CreateResponseForRequester(Sender requester, Sender me, HttpRequest request, int count = 5)
         {
-            var account = await GetAccountForRequesterAsync(requester);
-            throw new System.NotImplementedException();
+            var accounts = await GetAccountForRequesterAsync(requester, count);
+            var response = new ApiMessage
+            {
+                Code = 200,
+                JsonObject = null,
+                RequestType = Const.RequestTypeGet,
+                StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl,
+                JsonSender = me.ToJson()
+            };
+            if (accounts?.Count > 0)
+            {
+                response.JsonObject = accounts.ToJson();
+                response.RequestType = Const.RequestTypeGet;
+            }
+            else
+            {
+                response.Code = 404;
+            }
+            return response;
         }
     }
 }

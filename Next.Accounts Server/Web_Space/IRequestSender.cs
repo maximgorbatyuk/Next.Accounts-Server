@@ -5,6 +5,6 @@ namespace Next.Accounts_Server.Web_Space
 {
     public interface IRequestSender
     {
-        Task<bool> SendPostDataAsync(ApiMessage message);
+        Task<bool> SendPostDataAsync(ApiMessage message, string url = null);
     }
 }
