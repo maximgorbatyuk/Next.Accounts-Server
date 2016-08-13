@@ -52,7 +52,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="260"/>
                     </Grid.RowDefinitions>
-                    <CheckBox x:Name="ConfirmCheck" Content="Confirm your actions" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="15" Width="130"/>
+                    <CheckBox x:Name="ConfirmCheck" Content="Confirm your actions" Margin="10,10,10,0" VerticalAlignment="Top" Height="15"/>
                     <Label x:Name="label5" Content="Delete accounts from local database" Margin="10,30,10,0" Height="26" VerticalAlignment="Top"/>
                     <Button x:Name="DeleteLocalButton" Content="Delete" Grid.Column="1" Margin="10,30,10,0" VerticalAlignment="Top" Height="26" Click="DeleteLocalButton_Click"/>
                     <Label x:Name="label5_Copy" Content="Restore accounts from remote Db . Valid center name is needed" Margin="10,61,10,0" Height="26" VerticalAlignment="Top"/>
@@ -61,7 +61,7 @@
                     <Button x:Name="BackupButton" Content="Backup" Grid.Column="1" Margin="10,92,10,0" VerticalAlignment="Top" Height="26" Click="BackupButton_Click"/>
                     <Label x:Name="label5_Copy2" Content="Restore from local backup" Margin="10,123,10,0" Height="26" VerticalAlignment="Top"/>
                     <Button x:Name="RestoreBackupButton" Content="Restore (backup)" Grid.Column="1" Margin="10,123,10,0" VerticalAlignment="Top" Height="26" Click="RestoreBackupButton_Click"/>
-                    <Label x:Name="label5_Copy3" Content="Return not mine accounts" Margin="10,154,10,0" Height="26" VerticalAlignment="Top"/>
+                    <Label Background="#B7FF7E7E" x:Name="label5_Copy3" Content="Return not mine accounts (ain't working at the moment)" Margin="10,154,10,0" Height="26" VerticalAlignment="Top"/>
                     <Button x:Name="ReturneAccountsButton" Content="Return" Grid.Column="1" Margin="10,154,10,0" VerticalAlignment="Top" Height="26" Click="ReturneAccountsButton_Click"/>
                 </Grid>
             </TabItem>
