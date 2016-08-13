@@ -38,7 +38,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         private string ResetAndGetFirst()
         {
-            foreach (var key in _centersDictionary.Keys)
+            foreach (var key in _centersDictionary.Keys.ToList())
             {
                 _centersDictionary[key] = false;
             }
@@ -95,26 +95,36 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         public async Task<ApiMessage> CreateResponseForRequester(Sender requester, Sender me, HttpRequest request, int count = 5)
         {
-            var accounts = await GetAccountForRequesterAsync(requester, count);
-            var response = new ApiMessage
-            {
-                Code = 200,
-                JsonObject = null,
-                RequestType = Const.RequestTypeGet,
-                StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl,
-                JsonSender = me.ToJson()
-            };
             string message = null;
-            if (accounts == null || accounts.Count == 0 || !_settings.GiveAccounts)
+            ApiMessage response = null;
+            if (_settings.GiveAccounts)
             {
-                response.Code = 404;
-                message = $"Denied request for accounts from {requester}";
+                var accounts = await GetAccountForRequesterAsync(requester, count);
+                response = new ApiMessage
+                {
+                    Code = 200,
+                    JsonObject = null,
+                    RequestType = Const.RequestTypeGet,
+                    StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl,
+                    JsonSender = me.ToJson()
+                };
+
+                if (accounts == null || accounts.Count == 0)
+                {
+                    response.Code = 404;
+                    message =
+                        $"Denied request for accounts from {requester} because of null/zero count of available accounts";
+                }
+                else
+                {
+                    response.JsonObject = accounts.ToJson();
+                    message = $"have prepared {accounts.Count} for server {requester} and sent it";
+                    response.RequestType = Const.RequestTypeGet;
+                }
             }
             else
             {
-                response.JsonObject = accounts.ToJson();
-                message = $"have prepared {accounts.Count} for server {requester} and sent it";
-                response.RequestType = Const.RequestTypeGet;
+                message = $"Denied request for accounts from {requester} because of settings permissions";
             }
             _listener.OnEvent(message);
             return response;
