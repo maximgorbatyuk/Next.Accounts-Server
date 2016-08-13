@@ -61,6 +61,8 @@
                     <Button x:Name="BackupButton" Content="Backup" Grid.Column="1" Margin="10,92,10,0" VerticalAlignment="Top" Height="26" Click="BackupButton_Click"/>
                     <Label x:Name="label5_Copy2" Content="Restore from local backup" Margin="10,123,10,0" Height="26" VerticalAlignment="Top"/>
                     <Button x:Name="RestoreBackupButton" Content="Restore (backup)" Grid.Column="1" Margin="10,123,10,0" VerticalAlignment="Top" Height="26" Click="RestoreBackupButton_Click"/>
+                    <Label x:Name="label5_Copy3" Content="Return not mine accounts" Margin="10,154,10,0" Height="26" VerticalAlignment="Top"/>
+                    <Button x:Name="ReturneAccountsButton" Content="Return" Grid.Column="1" Margin="10,154,10,0" VerticalAlignment="Top" Height="26" Click="ReturneAccountsButton_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Database values">

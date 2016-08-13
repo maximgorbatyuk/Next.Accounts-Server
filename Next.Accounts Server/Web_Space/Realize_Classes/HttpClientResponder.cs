@@ -86,7 +86,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 }
                 else if (sender?.AppType == Const.ServerAppType)
                 {
-                    response = await ServerSpeaker.CreateResponseForRequester(sender, _me, request);
+                    response = await ServerSpeaker.CreateResponseForRequester(requestType, sender, _me, apiMessage);
                 }
                 
                 if (response != null)
@@ -101,7 +101,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
             else if (request.HttpMethod == "GET")
             {
                 var html = await GetHtmlPage(context) ??
-                           "<h1>Infopage.html does not exists</h1><h2>Load it from github</h2>";
+                           "<h1>Infopage.html does not exists</h1><br><br><br>" +
+                           "<h2>Load it from github or ask a <a href='https://new.vk.com/maximgorbatyuk'>developer</a> for it</h2>";
                 CloseHttpContext(context, html, contentType: "text/html");
                 EventListener.OnEvent("GET request has been processed");
             }

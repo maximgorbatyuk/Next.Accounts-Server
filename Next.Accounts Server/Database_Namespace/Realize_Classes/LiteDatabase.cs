@@ -191,10 +191,11 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
             return account;
         }
 
-        public async Task<List<Account>> GetAccounts(bool availableOnly = false)
+        public async Task<List<Account>> GetAccounts(bool availableOnly = false, string predicate = null)
         {
             //var query = all ? $"SELECT * FROM {_accountTableName}" : $"SELECT * FROM {_accountTableName} WHERE {AvailableColumn}=0";
             var query = $"SELECT * FROM {_accountTableName}";
+            query = predicate != null ? $"{query} {predicate}" : query;
             var dt = await GetQueryResultAsync(query);
             List<Account> accounts = null;
             if (dt == null) return null;

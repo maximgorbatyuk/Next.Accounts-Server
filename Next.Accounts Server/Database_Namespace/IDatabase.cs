@@ -18,7 +18,7 @@ namespace Next.Accounts_Server.Database_Namespace
 
         Task<int> UpdateAccountAsync(IList<Account> accounts);
 
-        Task<List<Account>> GetAccounts(bool availableOnly = false);
+        Task<List<Account>> GetAccounts(bool availableOnly = false, string predicate = null);
 
         Task<List<Account>> GetUsedAccounts();
 

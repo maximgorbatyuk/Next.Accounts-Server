@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Next.Accounts_Server.Application_Space;
@@ -93,39 +94,71 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
             return accounts;
         }
 
-        public async Task<ApiMessage> CreateResponseForRequester(Sender requester, Sender me, HttpRequest request, int count = 5)
+        public async Task<ApiMessage> CreateResponseForRequester(ApiRequests type, Sender requester, Sender me, ApiMessage request, int count = 5)
         {
             string message = null;
-            ApiMessage response = null;
-            if (_settings.GiveAccounts)
+            ApiMessage response = new ApiMessage
             {
-                var accounts = await GetAccountForRequesterAsync(requester, count);
-                response = new ApiMessage
-                {
-                    Code = 200,
-                    JsonObject = null,
-                    RequestType = Const.RequestTypeGet,
-                    StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl,
-                    JsonSender = me.ToJson()
-                };
+                Code = 200,
+                JsonObject = null,
+                RequestType = null,
+                StringMessage = request?.ToJson(),
+                JsonSender = me.ToJson()
+            }; ;
 
-                if (accounts == null || accounts.Count == 0)
-                {
-                    response.Code = 404;
-                    message =
-                        $"Denied request for accounts from {requester} because of null/zero count of available accounts";
-                }
-                else
-                {
-                    response.JsonObject = accounts.ToJson();
-                    message = $"have prepared {accounts.Count} for server {requester} and sent it";
-                    response.RequestType = Const.RequestTypeGet;
-                }
-            }
-            else
+            if (request == null) return null;
+
+            switch (type)
             {
-                message = $"Denied request for accounts from {requester} because of settings permissions";
+                case ApiRequests.GetAccount:
+                    if (_settings.GiveAccounts)
+                    {
+                        var accountsToSend = await GetAccountForRequesterAsync(requester, count);
+                        
+
+                        if (accountsToSend == null || accountsToSend.Count == 0)
+                        {
+                            response.Code = 404;
+                            response.RequestType = Const.RequestTypeGet;
+                            message = $"Denied request for accounts from {requester} because of null/zero count of available accounts";
+                        }
+                        else
+                        {
+                            response.JsonObject = accountsToSend.ToJson();
+                            message = $"have prepared {accountsToSend.Count} for server {requester} and sent it";
+                            response.RequestType = Const.RequestTypeGet;
+                        }
+                    }
+                    else
+                    {
+                        message = $"Denied request for accounts from {requester} because of settings permissions";
+                    }
+                    break;
+                case ApiRequests.ReleaseAccount:
+                    var accountsToRelease = request.JsonObject.ParseJson<List<Account>>();
+                    if (accountsToRelease != null)
+                    {
+                        await _database.AddAccountAsync(accountsToRelease);
+                        response.RequestType = Const.RequestTypeRelease;
+                        response.Code = 200;
+                        message =
+                            $"Have received {accountsToRelease.Count} of accounts from {requester} as Release operation";
+                    }
+                    else
+                    {
+                        message =
+                            $"Have received a Release request from {requester}, but a list of accounts is null";
+                        response = null;
+                    }
+                    break;
+                case ApiRequests.UsingAccount:
+                case ApiRequests.Unknown:
+                case ApiRequests.None:
+                default:
+                    response = null;
+                    break;
             }
+            
             _listener.OnEvent(message);
             return response;
         }

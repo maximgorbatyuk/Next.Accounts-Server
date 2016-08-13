@@ -225,5 +225,11 @@ namespace Next.Accounts_Server.Windows
             var item = AccountListBox.SelectedItem;
             if (item != null) LoadAccountToComponents((Account) item);
         }
+
+        private async void ReturneAccountsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var accounts = await _database.GetAccounts(predicate: $"WHERE Owner!='{_source.CenterName}'");
+            DisplayInfo($"Here is a {accounts?.Count} of not mine accounts ");
+        }
     }
 }
