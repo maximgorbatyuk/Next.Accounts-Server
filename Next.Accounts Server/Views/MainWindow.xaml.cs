@@ -83,7 +83,7 @@ namespace Next.Accounts_Server
             _logger         = new DefaultLogger();
             _requestSender  = new WebClientController(listener: this, responseListener: this);
             _database       = new LiteDatabase(listener: this, dbListener: this, dbName: _settings.DatabaseName);
-            _serverSpeaker  = new DefaultServerSpeaker(_settings, _database, _requestSender);
+            _serverSpeaker  = new DefaultServerSpeaker(_settings, _database, _requestSender, this);
             _usedTracker    = new DefaultUsedTracker( _settings.UsedMinuteLimit);
 
 

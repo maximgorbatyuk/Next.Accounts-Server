@@ -21,6 +21,10 @@ namespace Next.Accounts_Server.Controllers
 
         public static async Task WriteToFileAsync(string filename, string text)
         {
+            if (text.Contains("{") && text.Contains("}"))
+            {
+                text = text.Replace("\",\"", "\",\n\"");
+            }
             using (var stream = File.CreateText(filename))
             {
                 await stream.WriteAsync(text);

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Next.Accounts_Server.Application_Space;
+using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Database_Namespace;
 using Next.Accounts_Server.Extensions;
 using Next.Accounts_Server.Models;
@@ -15,16 +16,19 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         private readonly IRequestSender _requestSender;
 
+        private readonly IEventListener _listener;
+
         private readonly Settings _settings;
 
         private readonly Dictionary<string, bool> _centersDictionary;
 
 
-        public DefaultServerSpeaker(Settings settings, IDatabase database, IRequestSender requestSender)
+        public DefaultServerSpeaker(Settings settings, IDatabase database, IRequestSender requestSender, IEventListener listener)
         {
             _settings = settings;
             _database = database;
             _requestSender = requestSender;
+            _listener = listener;
             _centersDictionary = new Dictionary<string, bool>();
             foreach (var address in _settings.AddressesList)
             {
@@ -44,8 +48,13 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         public async Task<bool> AskAccounts(Sender me)
         {
+            if (!_settings.AskAccounts)
+            {
+                _listener.OnEvent("Request for extra accounts has NOT been sent because of settings permissions");
+                return false;
+            }
             string address = null;
-            foreach (var key in _centersDictionary.Keys)
+            foreach (var key in _centersDictionary.Keys.ToList())
             {
                 if (_centersDictionary[key] == true) continue;
                 _centersDictionary[key] = true;
@@ -63,6 +72,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 StringMessage = "Give me accounts, please"
             };
             var result = await _requestSender.SendPostDataAsync(request, address);
+            var message = result ? $"Have sent a request for account to server: {address}" : $"Tried to connect to server {address}, but no connection";
+            _listener.OnEvent(message);
             return result;
         }
 
@@ -93,15 +104,19 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 StringMessage = request.HttpMethod == "POST" ? request.PostData : request.RawUrl,
                 JsonSender = me.ToJson()
             };
-            if (accounts?.Count > 0)
+            string message = null;
+            if (accounts == null || accounts.Count == 0 || !_settings.GiveAccounts)
             {
-                response.JsonObject = accounts.ToJson();
-                response.RequestType = Const.RequestTypeGet;
+                response.Code = 404;
+                message = $"Denied request for accounts from {requester}";
             }
             else
             {
-                response.Code = 404;
+                response.JsonObject = accounts.ToJson();
+                message = $"have prepared {accounts.Count} for server {requester} and sent it";
+                response.RequestType = Const.RequestTypeGet;
             }
+            _listener.OnEvent(message);
             return response;
         }
     }

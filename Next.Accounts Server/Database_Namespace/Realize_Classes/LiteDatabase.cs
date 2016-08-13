@@ -133,7 +133,7 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
         {
             Account account = null;
             var accounts = await GetAccounts();
-            if (accounts.Count == 0)
+            if (accounts == null || accounts.Count == 0)
             {
                 _dbListener.UpdateAccountCount(0, 0);
                 return null;
@@ -186,6 +186,7 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
         public async Task<List<Account>> GetUsedAccounts()
         {
             var account = await GetAccounts();
+            if (account == null) return null;
             account = account.Where(a => a.Available == false).ToList();
             return account;
         }
