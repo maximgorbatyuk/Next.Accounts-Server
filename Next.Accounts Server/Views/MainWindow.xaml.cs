@@ -233,15 +233,15 @@ namespace Next.Accounts_Server
             }
             if (sender.AppType != Const.ServerAppType) return;
             string display = null;
-            if (api.Code == 200)
+            if (api.Code == 404 || api.JsonObject == null)
+            {
+                display = $"Server {sender} have no free accounts";
+            }
+            else
             {
                 var accounts = api.JsonObject.ParseJson<List<Account>>();
                 await _database.AddAccountAsync(accounts);
                 display = $"Have got a {accounts.Count} of accounts from {sender}";
-            }
-            else
-            {
-                display = $"Server {sender} have no free accounts";
             }
             DisplayText(display);
 

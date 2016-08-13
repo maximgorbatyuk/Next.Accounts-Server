@@ -246,8 +246,8 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
                          $"{account.Available.ToInt()}, " +
                          $"'{account.ComputerName}', " +
                          $"'{account.CenterOwner}')";
-                //_allCount++;
-                //_availableCount++;
+                _allCount++;
+                _availableCount++;
                 if (index != (source.Count - 1)) query += ", ";
             }
             var count = await ExecuteNonQueryAsync(query);
