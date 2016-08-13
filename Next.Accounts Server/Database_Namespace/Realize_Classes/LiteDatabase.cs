@@ -121,8 +121,13 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
             return result;
         }
 
-        public async Task<int> DeleteAccountsTable() => 
-            await ExecuteNonQueryAsync($"delete from {_accountTableName} where {Const.IdColumn}>0");
+        public async Task<int> DeleteAccountsTable()
+        {
+            var count = await ExecuteNonQueryAsync($"delete from {_accountTableName} where {Const.IdColumn}>0");
+            _dbListener.UpdateAccountCount(0, 0);
+            return count;
+        }
+        
 
         public void Dispose()
         {
@@ -241,8 +246,8 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
                          $"{account.Available.ToInt()}, " +
                          $"'{account.ComputerName}', " +
                          $"'{account.CenterOwner}')";
-                _allCount++;
-                _availableCount++;
+                //_allCount++;
+                //_availableCount++;
                 if (index != (source.Count - 1)) query += ", ";
             }
             var count = await ExecuteNonQueryAsync(query);
