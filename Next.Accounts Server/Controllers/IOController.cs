@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Next.Accounts_Server.Controllers
@@ -10,9 +11,19 @@ namespace Next.Accounts_Server.Controllers
             string result = null;
             if (File.Exists(filename))
             {
-                using (var stream = File.OpenText(filename))
+                StreamReader stream = null;
+                try
                 {
+                    stream = File.OpenText(filename);
                     result = await stream.ReadToEndAsync();
+                }
+                catch (Exception ex)
+                {
+                    // ignored
+                }
+                finally
+                {
+                    stream?.Close();
                 }
             }
             
@@ -21,21 +32,38 @@ namespace Next.Accounts_Server.Controllers
 
         public static async Task WriteToFileAsync(string filename, string text)
         {
-            if (text.Contains("{") && text.Contains("}"))
+            if (text.Contains("{") && text.Contains("}")) text = text.Replace("\",\"", "\",\n\"");
+            StreamWriter stream = null;
+            try
             {
-                text = text.Replace("\",\"", "\",\n\"");
-            }
-            using (var stream = File.CreateText(filename))
-            {
+                stream = File.CreateText(filename);
                 await stream.WriteAsync(text);
+            }
+            catch (Exception ex)
+            {
+                // ignored
+            }
+            finally
+            {
+                stream?.Close();
             }
         }
 
         public static async void AppendToFileAsync(string filename, string text)
         {
-            using (var stream = File.AppendText(filename))
+            StreamWriter stream = null;
+            try
             {
+                stream = File.AppendText(filename);
                 await stream.WriteAsync(text);
+            }
+            catch (Exception ex)
+            {
+                // ignored
+            }
+            finally
+            {
+                stream?.Close();
             }
         }
     }
