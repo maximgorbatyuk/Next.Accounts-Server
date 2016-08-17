@@ -38,6 +38,7 @@ namespace Next.Accounts_Server
         private IServerSpeaker _serverSpeaker;
         private ILogger _logger;
         private IRequestSender _requestSender;
+        private ISettingsManager _settingsManager;
 
         
         ///private TcpServer _tcpServer;
@@ -76,8 +77,9 @@ namespace Next.Accounts_Server
 
         private async void InitSettings(Settings s = null)
         {
+            _settingsManager = new DefaultSettingsManager();
             if (s != null) _settings = s;
-            else _settings = await LoadOrGetDefault();
+            else _settings = await _settingsManager.LoadSettings();
 
             _me             = Const.GetSender(name: _settings.CenterName, client: false);
             _logger         = new DefaultLogger();
@@ -85,14 +87,16 @@ namespace Next.Accounts_Server
             _database       = new LiteDatabase(listener: this, dbListener: this, dbName: _settings.DatabaseName);
             _serverSpeaker  = new DefaultServerSpeaker(_settings, _database, _requestSender, this);
             _usedTracker    = new DefaultUsedTracker( _settings.UsedMinuteLimit);
-
+            var getResponder = new GetResponder(_database, _me, _settings);
 
             var clientProcessor = new HttpClientResponder(_me, _settings)
             {
                 Database = _database,
                 EventListener = this,
                 UsedTracker = _usedTracker,
-                ServerSpeaker = _serverSpeaker
+                ServerSpeaker = _serverSpeaker,
+                GetResponder = getResponder,
+                SettingsChangedListener = this
             };
 
             _server?.Close();
@@ -100,22 +104,6 @@ namespace Next.Accounts_Server
             _server = new HttpServer(clientProcessor, this, url);
             CheckUsedAccounts();
             StartListenButton_OnClick(this, null);
-        }
-
-        private async Task<Settings> LoadOrGetDefault()
-        {
-            var settingsText = await IoController.ReadFileAsync(Const.SettingsFilename);
-            Settings settings = null;
-            if (settingsText == null || settingsText == "null")
-            {
-                settings = new Settings();
-                await IoController.WriteToFileAsync(Const.SettingsFilename, _settings.ToJson());
-            }
-            else
-            {
-                settings = settingsText.ParseJson<Settings>();
-            }
-            return settings;
         }
 
         private void DisplayIpAddresses()
@@ -139,19 +127,22 @@ namespace Next.Accounts_Server
             _workTimer?.Stop();
         }
 
-        private void StartListenButton_OnClick(object sender, RoutedEventArgs e)
+        private async void StartListenButton_OnClick(object sender, RoutedEventArgs e)
         {
             if (_server.GetListenState())
             {
-                StartListenButton.Header = "Start listenning";
+                await StartListenButton.Dispatcher.InvokeAsync(() => StartListenButton.Header = "Start listenning");
                 _server.Close();
-                ServerMenuItem.Background = new SolidColorBrush(Color.FromArgb(255, 227, 158, 158));
+                await ServerMenuItem.Dispatcher.InvokeAsync(() =>
+                    ServerMenuItem.Background = new SolidColorBrush(Color.FromArgb(255, 227, 158, 158)));
             }
             else
             {
-                StartListenButton.Header = "Stop listenning";
+                await StartListenButton.Dispatcher.InvokeAsync(() => StartListenButton.Header = "Stop listenning");
                 _server.Start();
-                ServerMenuItem.Background = new SolidColorBrush(Color.FromArgb(255, 158, 227, 174));
+                await ServerMenuItem.Dispatcher.InvokeAsync(() => 
+                    ServerMenuItem.Background = new SolidColorBrush(Color.FromArgb(255, 158, 227, 174)));
+                
             }
         }
 
@@ -177,7 +168,12 @@ namespace Next.Accounts_Server
 
         public void OnSettingsChanged(Settings settings)
         {
-            InitSettings(settings);
+            Dispatcher.InvokeAsync(() =>
+            {
+                _settingsManager.SaveSettings(settings);
+                InitSettings(settings);
+            } ) ;
+
             //throw new NotImplementedException();
         }
 

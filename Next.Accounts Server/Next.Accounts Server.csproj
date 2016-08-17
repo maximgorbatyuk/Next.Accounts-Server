@@ -91,8 +91,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Application_Space\Const.cs" />
+    <Compile Include="Application_Space\DefaultSettingsManager.cs" />
     <Compile Include="Application_Space\IEventListener.cs" />
     <Compile Include="Application_Space\ISettingsChangedListener.cs" />
+    <Compile Include="Application_Space\ISettingsManager.cs" />
     <Compile Include="Timers\ITimeListener.cs" />
     <Compile Include="Timers\WorkTimer.cs" />
     <Compile Include="Controllers\DefaultLogger.cs" />
@@ -112,8 +114,10 @@
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\HttpRequest.cs" />
     <Compile Include="Models\Settings.cs" />
+    <Compile Include="Web_Space\IGetResponder.cs" />
     <Compile Include="Web_Space\IServerSpeaker.cs" />
     <Compile Include="Web_Space\Realize_Classes\DefaultServerSpeaker.cs" />
+    <Compile Include="Web_Space\Realize_Classes\GetResponder.cs" />
     <Compile Include="Web_Space\Realize_Classes\HttpClientResponder.cs" />
     <Compile Include="Web_Space\IRequestSender.cs" />
     <Compile Include="Web_Space\IResponseListener.cs" />

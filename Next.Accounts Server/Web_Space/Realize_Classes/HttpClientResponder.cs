@@ -18,18 +18,18 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
     {
 
         public  IEventListener EventListener { get; set; }
-
         public IDatabase Database { get; set; }
-
         public IServerSpeaker ServerSpeaker { get; set; }
+        public IGetResponder GetResponder { get; set; }
+        public IUsedTracker UsedTracker { get; set; }
+        public ISettingsChangedListener SettingsChangedListener { get; set; }
 
         private readonly DispatcherTimer _timer;
-
-        public IUsedTracker UsedTracker { get; set; }
 
         private readonly Sender _me;
 
         private Settings _settings;
+
 
         public HttpClientResponder(Sender me, Settings settings, int min = 1)
         {
@@ -68,83 +68,100 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 RawUrl = context.Request.RawUrl,
                 SenderAddress = context.Request.UserHostAddress
             };
-
+            string remoteIp = $"{context.Request.RemoteEndPoint?.Address.ToString()}:{context.Request.RemoteEndPoint?.Port}";
             //ReturnWebError(context, "Fuck you");
             //return;
 
-            if (request.HttpMethod == "POST")
+            switch (request.HttpMethod)
             {
-                request.PostData = new StreamReader(request.InputStream).ReadToEnd();
-                var apiMessage = request.PostData.ParseJson<ApiMessage>();
-                var requestType = Const.GetRequestType(apiMessage);
-                var sender = apiMessage.JsonSender.ParseJson<Sender>();
-                ApiMessage response = null;
+                case "POST":
+                    request.PostData = new StreamReader(request.InputStream).ReadToEnd();
+                    if (request.RawUrl == "/settings")
+                    {
+                        // %3A
+                        request.PostData = request.PostData.Replace("%3A", ":").Replace("%0D%0A", "\n");
+                        string htmlSettings = null;
+                        var postArray = request.PostData.Split('&').ToList();
+                        try
+                        {
+                            var postgresConnString =
+                                postArray.FirstOrDefault(p => p.Contains("PostgresConnectionString"))?.Split('=')[1];
+                            var addressesList =
+                                postArray.FirstOrDefault(p => p.Contains("AddressesList"))?.Split('=')[1].Split('\n').ToList();
+                            var askAccounts = postArray.FirstOrDefault(p => p.Contains("AskAccounts"))?.Split('=')[1] ==
+                                              "on";
+                            var giveAccounts =
+                                postArray.FirstOrDefault(p => p.Contains("GiveAccounts"))?.Split('=')[1] == "on";
+                            var setIssueLimit =
+                                postArray.FirstOrDefault(p => p.Contains("SetIssueLimit"))?.Split('=')[1] == "on";
+                            var issueLimitValue =
+                                postArray.FirstOrDefault(p => p.Contains("IssueLimitValue"))?.Split('=')[1].ParseInt();
+                            var usedMinuteLimit =
+                                postArray.FirstOrDefault(p => p.Contains("UsedMinuteLimit"))?.Split('=')[1].ParseInt();
+                            _settings.PostgresConnectionString = string.IsNullOrWhiteSpace(postgresConnString)
+                                ? _settings.PostgresConnectionString
+                                : postgresConnString;
+                            _settings.AddressesList = addressesList?.Where(a => string.IsNullOrWhiteSpace(a) == false).ToList();
+                            _settings.AskAccounts = askAccounts;
+                            _settings.GiveAccounts = giveAccounts;
+                            _settings.SetIssueLimit = setIssueLimit;
+                            if (issueLimitValue != null)
+                            {
+                                _settings.IssueLimitValue = issueLimitValue.Value == -1
+                               ? _settings.IssueLimitValue :
+                               issueLimitValue.Value;
+                            }
+                            if (usedMinuteLimit != null)
+                            {
+                                _settings.UsedMinuteLimit = usedMinuteLimit.Value == -1
+                               ? _settings.UsedMinuteLimit :
+                               usedMinuteLimit.Value;
+                            }
+                            htmlSettings = await GetResponder.GetHtmlPage(context, raw: "/", message: $"Settings has been updated");
+                            SettingsChangedListener.OnSettingsChanged(_settings);
+                           
+                        }
+                        catch (Exception ex)
+                        {
+                            EventListener.OnException(ex);
+                            
+                            htmlSettings = await GetResponder.GetHtmlPage(context, raw: "/", message: $"Could not save settings. Exception {ex.Message}", error: true);
+                        }
+                        //htmlSettings = postArray.ToJson();
 
-                if (sender?.AppType == Const.ClientAppType)
-                {
-                    response = await CreateHttpResponseAsync(requestType, request);
-                }
-                else if (sender?.AppType == Const.ServerAppType)
-                {
-                    response = await ServerSpeaker.CreateResponseForRequester(requestType, sender, _me, apiMessage);
-                }
-                
-                if (response != null)
-                {
-                    CloseHttpContext(context, response);
-                }
-                else
-                {
-                    ReturnWebError(context, "Server could not recognize received request");
-                }
-            } 
-            else if (request.HttpMethod == "GET")
-            {
-                var html = await GetHtmlPage(context) ??
-                           "<h1>Infopage.html does not exists</h1><br><br><br>" +
-                           "<h2>Load it from github or ask a <a href='https://new.vk.com/maximgorbatyuk'>developer</a> for it</h2>";
-                CloseHttpContext(context, html, contentType: "text/html");
-                EventListener.OnEvent("GET request has been processed");
+                        //var htmlPost = await GetResponder.GetHtmlPage(context);
+                        CloseHttpContext(context, htmlSettings, contentType: "text/html");
+                        EventListener.OnEvent($"Updated settings by request from {remoteIp}");
+                        
+                    }
+                    else
+                    {
+                        
+                        var apiMessage = request.PostData.ParseJson<ApiMessage>();
+                        var requestType = Const.GetRequestType(apiMessage);
+                        var sender = apiMessage.JsonSender.ParseJson<Sender>();
+                        ApiMessage response = null;
+
+                        if (sender?.AppType == Const.ClientAppType)
+                            response = await CreateHttpResponseAsync(requestType, request);
+
+                        else if (sender?.AppType == Const.ServerAppType)
+                            response = await ServerSpeaker.CreateResponseForRequester(requestType, sender, _me, apiMessage);
+
+                        if (response != null) CloseHttpContext(context, response);
+                        else ReturnWebError(context, "Server could not recognize received request");
+                    }
+                    break;
+
+                case "GET":
+                    var html = await GetResponder.GetHtmlPage(context, raw: context.Request.RawUrl) ??
+                               "<h1>Infopage.html does not exists</h1><br><br><br>" +
+                               "<h2>Load it from github or ask a <a href='https://new.vk.com/maximgorbatyuk'>developer</a> for it</h2>";
+                    CloseHttpContext(context, html, contentType: "text/html");
+                    EventListener.OnEvent($"GET request({remoteIp}) has been processed");
+                    break;
             }
         }
-
-        private async Task<string> GetHtmlPage(HttpListenerContext context)
-        {
-            var html = await IoController.ReadFileAsync(Const.HtmlPageFilename);
-            var accounts = await Database.GetAccounts();
-            if (html == null) return null;
-            var meText = $"Information about server:" +
-                         $"<ul>" +
-                         $"<li>Version: {_me.AppVersion}</li>" +
-                         $"<li>Machine name: {_me.Name}</li>" +
-                         $"<li>Local IP: {_me.IpAddress}</li>" +
-                         $"</ul>";
-            //html = html.Replace("#CenterName", _settings.CenterName).Replace("#me", meText);
-            string accountList = "No accounts in local storage (Null data)";
-            if (accounts != null)
-            {
-                accountList = "No accounts in local storage";
-                if (accounts.Count > 0)
-                {
-                    accountList = accounts.Aggregate("<ul class=\"list-group\">",
-                    (current, a) => current + $"<li class=\"list-group-item\">{a}</li>");
-                }
-                //html.Replace("#AccountList", accountList);
-            }
-            //html = html.Replace("#AccountList", accountList).Replace("#CenterName", _settings.CenterName).Replace("#me", meText);
-            var request = context.Request;
-            var senderText = $"Request data:<br>" +
-                             $"HttpMethod: {request.HttpMethod}<br>" +
-                             $"End point: {request.RemoteEndPoint?.Address.ToString()}:{request.RemoteEndPoint?.Port}<br>" +
-                             $"User agent: {request.UserAgent}<br>" +
-                             $"Raw url: {request.RawUrl}";
-            html = html
-                .Replace("#sender", senderText)
-                .Replace("#AccountList", accountList)
-                .Replace("#CenterName", _settings.CenterName)
-                .Replace("#me", meText);
-            return html;
-        } 
 
         public void ReturnWebError(HttpListenerContext context, string message)
         {

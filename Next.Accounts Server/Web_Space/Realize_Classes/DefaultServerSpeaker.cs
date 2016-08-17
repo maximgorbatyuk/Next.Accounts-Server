@@ -33,7 +33,14 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
             _centersDictionary = new Dictionary<string, bool>();
             foreach (var address in _settings.AddressesList)
             {
-                _centersDictionary.Add(address, false);
+                try
+                {
+                    _centersDictionary.Add(address, false);
+                }
+                catch (Exception ex)
+                {
+                    // ignored
+                }
             }
         }
 

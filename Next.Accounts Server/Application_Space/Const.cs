@@ -44,22 +44,24 @@ namespace Next.Accounts_Server.Application_Space
 
         public static readonly string RequestTypeRelease = "ReleaseAccount";
 
-        public static readonly string HtmlPageFilename = "infopage.html";
+        public static readonly string IndexPageFilename = "IndexPage.html";
 
-        
+        public static readonly string SettingsPageFilename = "SettingsWebPage.html";
+
+
 
         public static IEnumerable<IPAddress> GetAddresses()
         {
             var me = Dns.GetHostName();
             var addresses = Dns.GetHostEntry(me).AddressList;
-            var localAddresses = addresses.Where(a => a.ToString().Contains("192.168"));
+            var localAddresses = addresses.Where(a => a.ToString().Contains("192.168") || a.ToString().Contains("10.8."));
             return localAddresses;
         }
 
         public static ApiRequests GetRequestType(ApiMessage api)
         {
             var result = ApiRequests.None;
-            if (api.RequestType == null) return result;
+            if (api?.RequestType == null) return result;
             switch (api.RequestType)
             {
                 case "GetAccount":
