@@ -97,6 +97,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                     html = html.Replace("#SetIssueLimit", _settings.SetIssueLimit ? "checked" : " ");
                     html = html.Replace("#IssueLimitValue", $"{_settings.IssueLimitValue}");
                     html = html.Replace("#UsedMinuteLimit", $"{_settings.UsedMinuteLimit}");
+                    html = html.Replace("#MinimalAccountLimit", $"{_settings.MinimalAccountLimit}");
+                    //#MinimalAccountLimit
                     break;
             }
             if (html == null) return null;
