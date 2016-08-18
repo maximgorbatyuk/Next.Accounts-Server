@@ -86,6 +86,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                         {
                             var postgresConnString =
                                 postArray.FirstOrDefault(p => p.Contains("PostgresConnectionString"))?.Split('=')[1];
+                            var minimal = postArray.FirstOrDefault(p => p.Contains("MinimalAccountLimit"))?.Split('=')[1].ParseInt();
+
                             var addressesList =
                                 postArray.FirstOrDefault(p => p.Contains("AddressesList"))?.Split('=')[1].Split('\n').ToList();
                             var askAccounts = postArray.FirstOrDefault(p => p.Contains("AskAccounts"))?.Split('=')[1] ==
@@ -117,6 +119,13 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                                ? _settings.UsedMinuteLimit :
                                usedMinuteLimit.Value;
                             }
+                            if (minimal != null)
+                            {
+                                _settings.MinimalAccountLimit = minimal.Value == -1
+                               ? _settings.MinimalAccountLimit :
+                               minimal.Value;
+                            }
+
                             htmlSettings = await GetResponder.GetHtmlPage(context, raw:"/settings", message: $"Settings has been updated");
                             SettingsChangedListener.OnSettingsChanged(_settings);
                            
