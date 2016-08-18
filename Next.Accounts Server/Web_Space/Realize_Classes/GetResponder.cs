@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Next.Accounts_Server.Application_Space;
@@ -23,23 +24,46 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
             _settings = settings;
         }
 
-        public async Task<string> GetHtmlPage(HttpListenerContext context, string raw = "/", string message = null, bool error = false)
+        public async Task<string> GetHtmlPage(HttpListenerContext context, string raw = null, string message = null, bool error = false)
         {
-            var result = await GetDefaultHtml(context, raw, message, error) ??
-                           "<h1>Infopage.html does not exists</h1><br><br><br>" +
-                           "<h2>Load it from github or ask a <a href='https://new.vk.com/maximgorbatyuk'>developer</a> for it</h2>";
+            var result = await GetDefaultHtml(context, raw, message, error) ?? GetDefaultPage();
             return result;
         }
 
-        private async Task<string> GetDefaultHtml(HttpListenerContext context, string raw = "/", string message = null, bool error = false)
+        private string GetDefaultPage()
+        {
+            var result = "<!DOCTYPE html>\r\n" +
+                         "<html lang=\"en\">\r\n<head>\r\n<meta charset=\"utf-8\">\r\n" +
+                         "<title>Next.Accounts</title>\r\n" +
+                         "<link rel=\"stylesheet\" href=\"http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">\r\n" +
+                         "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js\">" +
+                         "</script>\r\n" +
+                         "<script src=\"http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js\"></script>\r\n" +
+                         "</head>\r\n" +
+                         "<body>" +
+                         "" +
+                         "<div class\"container\">" +
+                         "<div class=\"jumbotron\">" +
+                         "<h1>Infopage.html does not exists</h1><br><br><br>" +
+                         "Load it from github or ask a <a href='https://new.vk.com/maximgorbatyuk'>developer</a> for it" +
+                         "</div></div>" +
+                         "</body>" +
+                         "</html>";
+            return result;
+        }
+
+        private async Task<string> GetDefaultHtml(HttpListenerContext context, string raw = null, string message = null, bool error = false)
         {
 
             
             string html = null;
+            raw = raw ?? context.Request.RawUrl;
+            string path = $"{Environment.CurrentDirectory}/Web_Pages/";
             switch (raw)
             {
                 case "/":
-                    html = await IoController.ReadFileAsync(Const.IndexPageFilename);
+                    
+                    html = await IoController.ReadFileAsync(path + Const.IndexPageFilename);
                     var accounts = await _database.GetAccounts();
                     if (html == null) return null;
                     var meText = $"<tr><td>Version of the ap</td><td>{_me.AppVersion}</td></tr>" +
@@ -61,13 +85,12 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 
                     html = html
                         .Replace("#accountlist", accountList)
-                        .Replace("#CenterName", _settings.CenterName)
                         .Replace("#me", meText)
                         .Replace("#footer", footer);
                     break;
 
                 case "/settings":
-                    html = await IoController.ReadFileAsync(Const.SettingsPageFilename);
+                    html = await IoController.ReadFileAsync(path + Const.SettingsPageFilename);
                     html = html.Replace("#AddressesList", _settings.AddressesList.Aggregate("", (current, a) => current + $"{a}\n"));
                     html = html.Replace("#AskAccounts", _settings.AskAccounts ? "checked" : " ");
                     html = html.Replace("#GiveAccounts", _settings.GiveAccounts ? "checked" : " ");
@@ -83,7 +106,10 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                              $"End point: {request.RemoteEndPoint?.Address.ToString()}:{request.RemoteEndPoint?.Port}<br>" +
                              $"User agent: {request.UserAgent}<br>" +
                              $"Raw url: {request.RawUrl}";
-            html = html.Replace("#sender", senderText);
+            html = html
+                .Replace("#sender", senderText)
+                .Replace("#CenterName", _settings.CenterName);
+
             var type = !error ? "alert alert-success" : "alert alert-danger";
             var head = !error ? "Success" : "Error";
             html = html.Replace("#alert", message != null ? $"<div class=\"{type}\">" +

@@ -117,7 +117,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                                ? _settings.UsedMinuteLimit :
                                usedMinuteLimit.Value;
                             }
-                            htmlSettings = await GetResponder.GetHtmlPage(context, raw: "/", message: $"Settings has been updated");
+                            htmlSettings = await GetResponder.GetHtmlPage(context, raw:"/settings", message: $"Settings has been updated");
                             SettingsChangedListener.OnSettingsChanged(_settings);
                            
                         }
@@ -125,7 +125,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                         {
                             EventListener.OnException(ex);
                             
-                            htmlSettings = await GetResponder.GetHtmlPage(context, raw: "/", message: $"Could not save settings. Exception {ex.Message}", error: true);
+                            htmlSettings = await GetResponder.GetHtmlPage(context, $"Could not save settings. Exception {ex.Message}", error: true);
                         }
                         //htmlSettings = postArray.ToJson();
 
@@ -154,7 +154,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                     break;
 
                 case "GET":
-                    var html = await GetResponder.GetHtmlPage(context, raw: context.Request.RawUrl) ??
+                    var html = await GetResponder.GetHtmlPage(context) ??
+                               "<div class=\"container\">" +
                                "<h1>Infopage.html does not exists</h1><br><br><br>" +
                                "<h2>Load it from github or ask a <a href='https://new.vk.com/maximgorbatyuk'>developer</a> for it</h2>";
                     CloseHttpContext(context, html, contentType: "text/html");

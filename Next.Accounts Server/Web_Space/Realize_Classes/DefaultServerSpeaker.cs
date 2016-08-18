@@ -87,10 +87,11 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         public async Task<List<Account>> GetAccountForRequesterAsync(Sender requester, int count)
         {
-            var accounts = await _database.GetAccounts(true);
-            if (accounts == null) return null;
-            accounts = accounts.Take(count).ToList();
-            foreach (var a in accounts)
+            var accounts = await _database.GetAccounts();
+            if (accounts == null || accounts.Count <= _settings.MinimalAccountLimit) return null;
+            var available = accounts.Where(a => a.Available == true).ToList();
+            available = available.Take(count).ToList();
+            foreach (var a in available)
             {
                 await _database.RemoveAccountAsync(a);
                 //a.Available = false;
@@ -98,7 +99,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 //await _database.UpdateAccountAsync(a);
             }
             //accounts.ForEach(a => a.Available = true);
-            return accounts;
+            return available;
         }
 
         public async Task<ApiMessage> CreateResponseForRequester(ApiRequests type, Sender requester, Sender me, ApiMessage request, int count = 5)

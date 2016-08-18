@@ -53,6 +53,7 @@ namespace Next.Accounts_Server.Windows
             IssueLimitTextBox.Text = source.IssueLimitValue.ToString();
             ExpiredTextBox.Text = source.UsedMinuteLimit.ToString();
             CloseOnExCheck.IsChecked = source.CloseOnException;
+            MinimalTextBox.Text = $"{source.MinimalAccountLimit}";
         }
 
         private Settings GetSettingsFromComponents()
@@ -63,6 +64,7 @@ namespace Next.Accounts_Server.Windows
 
             var issueLimit = !string.IsNullOrWhiteSpace(IssueLimitTextBox.Text) ? int.Parse(IssueLimitTextBox.Text) : 10;
             var expired = !string.IsNullOrWhiteSpace(ExpiredTextBox.Text) ? int.Parse(ExpiredTextBox.Text) : 5;
+            var minimal = !string.IsNullOrWhiteSpace(MinimalTextBox.Text) ? int.Parse(MinimalTextBox.Text) : 5;
             var settings = new Settings
             {
                 PostgresConnectionString = ConnStringTextBox.Text,
@@ -74,7 +76,8 @@ namespace Next.Accounts_Server.Windows
                 IssueLimitValue = issueLimit,
                 UsedMinuteLimit = expired,
                 DefaultSettings = false,
-                CloseOnException = CloseOnExCheck.IsChecked != null && CloseOnExCheck.IsChecked.Value
+                CloseOnException = CloseOnExCheck.IsChecked != null && CloseOnExCheck.IsChecked.Value,
+                MinimalAccountLimit = minimal
             };
             return settings;
         }

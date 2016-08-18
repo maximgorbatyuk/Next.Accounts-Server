@@ -10,6 +10,8 @@ namespace Next.Accounts_Server.Models
 
         public string Port { get; set; } = "8082";
 
+        public int MinimalAccountLimit { get; set; } = 15;
+
         public string CenterName { get; set; } = "Unknown";
 
         public bool AskAccounts { get; set; } = false; //

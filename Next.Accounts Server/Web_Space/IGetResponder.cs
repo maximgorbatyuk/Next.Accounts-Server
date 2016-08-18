@@ -5,6 +5,6 @@ namespace Next.Accounts_Server.Web_Space
 {
     public interface IGetResponder
     {
-        Task<string> GetHtmlPage(HttpListenerContext context, string raw = "/", string message = null, bool error = false);
+        Task<string> GetHtmlPage(HttpListenerContext context, string raw = null, string message = null, bool error = false);
     }
 }
