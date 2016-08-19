@@ -59,19 +59,24 @@ namespace Next.Accounts_Server
             //AppDomain.CurrentDomain.FirstChanceException += CurrentDomainOnUnhandledException(this, null);
         }
 
-        private void CurrentOnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs dispatcherUnhandledExceptionEventArgs)
-        {
-            CurrentDomainOnUnhandledException(sender, null);
-        }
-
-        private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs unhandledExceptionEventArgs)
+        private void CloseByUnhandledException(Exception ex)
         {
             if (_settings == null || !_settings.CloseOnException) return;
-            _logger.LogError("Closed/restarted by unhandled expetion");
+            _logger.LogError($"Closed/restarted by unhandled expetion: {ex.Message}");
             System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
             //Application.Current.Shutdown();
             var me = Process.GetCurrentProcess();
             me.Kill();
+        }
+
+        private void CurrentOnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs dispatcherUnhandledExceptionEventArgs)
+        {
+            CloseByUnhandledException(dispatcherUnhandledExceptionEventArgs.Exception);
+        }
+
+        private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs unhandledExceptionEventArgs)
+        {
+            CloseByUnhandledException((Exception) unhandledExceptionEventArgs.ExceptionObject);
         }
 
         private async void CheckUsedAccounts()
