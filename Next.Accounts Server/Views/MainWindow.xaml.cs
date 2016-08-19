@@ -67,6 +67,7 @@ namespace Next.Accounts_Server
         private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs unhandledExceptionEventArgs)
         {
             if (_settings == null || !_settings.CloseOnException) return;
+            _logger.LogError("Closed/restarted by unhandled expetion");
             System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
             //Application.Current.Shutdown();
             var me = Process.GetCurrentProcess();
