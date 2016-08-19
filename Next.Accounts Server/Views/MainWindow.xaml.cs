@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Controllers;
 using Next.Accounts_Server.Database_Namespace;
@@ -52,12 +54,21 @@ namespace Next.Accounts_Server
             var version = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
             VersionLabel.Content = version;
             TestDatabase();
-            //AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+            Application.Current.DispatcherUnhandledException += CurrentOnDispatcherUnhandledException;
+            //AppDomain.CurrentDomain.FirstChanceException += CurrentDomainOnUnhandledException(this, null);
+        }
+
+        private void CurrentOnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs dispatcherUnhandledExceptionEventArgs)
+        {
+            CurrentDomainOnUnhandledException(sender, null);
         }
 
         private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs unhandledExceptionEventArgs)
         {
             if (_settings == null || !_settings.CloseOnException) return;
+            System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
+            //Application.Current.Shutdown();
             var me = Process.GetCurrentProcess();
             me.Kill();
         }
@@ -138,8 +149,13 @@ namespace Next.Accounts_Server
             }
             else
             {
-                await StartListenButton.Dispatcher.InvokeAsync(() => StartListenButton.Header = "Stop listenning");
-                _server.Start();
+                while (!_server.GetListenState())
+                {
+                    await Task.Delay(100);
+                    _server.Start();
+                }
+                    await StartListenButton.Dispatcher.InvokeAsync(() => StartListenButton.Header = "Stop listenning");
+                
                 await ServerMenuItem.Dispatcher.InvokeAsync(() => 
                     ServerMenuItem.Background = new SolidColorBrush(Color.FromArgb(255, 158, 227, 174)));
                 
@@ -179,6 +195,7 @@ namespace Next.Accounts_Server
 
         private async void TestDatabase()
         {
+            
             //while (_serverSpeaker == null) { await Task.Delay(100); }
             //var resp = await _serverSpeaker.CreateResponseForRequester( _me, null);
         }
@@ -252,6 +269,11 @@ namespace Next.Accounts_Server
         private void ClearTextBoxMenu_OnClick(object sender, RoutedEventArgs e)
         {
             LogTextBox.Text = "";
+        }
+
+        private void ExMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }
