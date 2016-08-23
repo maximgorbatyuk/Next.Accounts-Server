@@ -288,7 +288,11 @@ namespace Next.Accounts_Client
             if (_arguments != null)
             {
                 _gameCode = _arguments.Length >= 1 ? _arguments[0] : "0";
-                if (_gameCode == "730") noVacBan = true;
+                if (_clientSettings?.VacBanGames != null)
+                {
+                    noVacBan = _clientSettings.VacBanGames.Any(i => i == _gameCode);
+                }
+                else if (_gameCode == "730") noVacBan = true;
                 var title = _arguments.Length >= 2 ? _arguments[1] : "Steam launcher";
                 this.Text = title;
             }

@@ -1,4 +1,6 @@
-﻿namespace Next.Accounts_Client.Application_Space
+﻿using System.Collections.Generic;
+
+namespace Next.Accounts_Client.Application_Space
 {
     public class ClientSettings
     {
@@ -19,5 +21,7 @@
         public string ProcessName { get; set; } = "steam";
 
         public string SteamDirectory { get; set; } = "C:\\Program Files (x86)\\Steam\\steam.exe";
+
+        public List<string> VacBanGames { get; set; } = new List<string> ();
     }
 }
