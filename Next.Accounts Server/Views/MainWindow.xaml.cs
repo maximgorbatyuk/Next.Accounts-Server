@@ -63,7 +63,7 @@ namespace Next.Accounts_Server
         {
             if (_settings == null || !_settings.CloseOnException) return;
             _logger.LogError($"Closed/restarted by unhandled expetion: {ex.Message}");
-            System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
+            Process.Start(Application.ResourceAssembly.Location);
             //Application.Current.Shutdown();
             var me = Process.GetCurrentProcess();
             me.Kill();

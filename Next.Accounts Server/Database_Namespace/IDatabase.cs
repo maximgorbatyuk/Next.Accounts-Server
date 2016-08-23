@@ -8,7 +8,7 @@ namespace Next.Accounts_Server.Database_Namespace
     public interface IDatabase
     {
 
-        Task<Account> GetAccount(Sender sender);
+        Task<Account> GetAccount(Sender sender, bool noVacBan = false);
 
         Task<int> ReleaseAccount(Account account);
 

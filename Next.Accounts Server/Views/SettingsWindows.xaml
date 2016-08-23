@@ -86,6 +86,9 @@
                     <Label x:Name="label10" Content="Center(club)" HorizontalAlignment="Left" Margin="11,156,0,0" VerticalAlignment="Top" Height="26" Width="75"/>
                     <TextBox x:Name="CenterTextBox" Height="23" Margin="87,160,10,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" IsEnabled="False"/>
                     <TextBox Grid.Column="0" x:Name="PasswordTextBox" Height="23" Margin="87,67,12,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top"/>
+                    <CheckBox x:Name="CheckBox_VacBanned" Content="VAC banned status" Margin="10,187,10,0" VerticalAlignment="Top"/>
+                    <Button x:Name="Button_SaveVacStatus" Content="Ok" Margin="0,210,10,0" HorizontalAlignment="Right" Width="75" Click="Button_SaveVacStatus_OnClick" Height="20" VerticalAlignment="Top" />
+                    <Label x:Name="label11" Content="Update VAC status" HorizontalAlignment="Left" Margin="11,207,0,0" VerticalAlignment="Top" Width="157"/>
                 </Grid>
             </TabItem>
         </TabControl>

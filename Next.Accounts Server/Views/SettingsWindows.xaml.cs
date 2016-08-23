@@ -30,6 +30,8 @@ namespace Next.Accounts_Server.Windows
         private PostgresDatabase _postgres;
         private Settings _source;
         private string _backupFilename = "accounts.js";
+        private Account _selectedAccount = null;
+        private bool _isLocalStorageSelected = false;
 
         public SettingsWindows(IDatabase database, Settings source, ISettingsChangedListener listener)
         {
@@ -205,6 +207,7 @@ namespace Next.Accounts_Server.Windows
             var accounts = await _database.GetAccounts();
             LoadListBox(accounts);
             CenterTextBox.IsEnabled = false;
+            _isLocalStorageSelected = true;
         }
 
         private async void PostgresLoadButton_Click(object sender, RoutedEventArgs e)
@@ -212,15 +215,18 @@ namespace Next.Accounts_Server.Windows
             var accounts = await _postgres.GetAccounts();
             LoadListBox(accounts);
             CenterTextBox.IsEnabled = true;
+            _isLocalStorageSelected = false;
         }
 
         private void LoadAccountToComponents(Account source)
         {
+            _selectedAccount = source;
             LoginTextBox.Text = source.Login;
             PasswordTextBox.Text = source.Password;
             AvailableCheck.IsChecked = source.Available;
             ComputerTextBox.Text = source.ComputerName;
             CenterTextBox.Text = source.CenterOwner;
+            CheckBox_VacBanned.IsChecked = source.VacBanned;
         }
 
         private void AccountListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -233,6 +239,21 @@ namespace Next.Accounts_Server.Windows
         {
             var accounts = await _database.GetAccounts(predicate: $"WHERE Owner!='{_source.CenterName}'");
             DisplayInfo($"Here is a {accounts?.Count} of not mine accounts ");
+        }
+
+        private async void Button_SaveVacStatus_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (!_isLocalStorageSelected || _selectedAccount == null)
+            {
+                DisplayInfo($"Remote DB has been loaded", true);
+                return;
+            }
+
+            var selected = _selectedAccount;
+            var status = CheckBox_VacBanned.IsChecked != null && CheckBox_VacBanned.IsChecked.Value;
+            selected.VacBanned = status;
+            var result = await _database.UpdateAccountAsync(selected);
+            DisplayInfo($"VAC status has been updated ({result})");
         }
     }
 }

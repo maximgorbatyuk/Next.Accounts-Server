@@ -47,7 +47,7 @@ namespace Next.Accounts_Server.Application_Space
         public static readonly string IndexPageFilename = "IndexPage.html";
 
         public static readonly string SettingsPageFilename = "SettingsWebPage.html";
-
+        public static readonly string VacBannedColumn = "VacBanned";
 
 
         public static IEnumerable<IPAddress> GetAddresses()

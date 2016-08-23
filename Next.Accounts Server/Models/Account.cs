@@ -16,6 +16,8 @@ namespace Next.Accounts_Server.Models
 
         public string CenterOwner { get; set; } = "Unknown";
 
+        public bool VacBanned { get; set; } = false;
+
         public override string ToString()
         {
             return $"{Login} (id{Id}, owner={CenterOwner})";

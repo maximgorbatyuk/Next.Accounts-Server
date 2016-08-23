@@ -73,7 +73,7 @@ namespace Next.Accounts_Client
             VersionLabel.Text = version;
         }
 
-        private async void RequestAccount()
+        private async void RequestAccount(bool noVacBan = false)
         {
             StartProgressBar();
             var api = new ApiMessage
@@ -82,7 +82,8 @@ namespace Next.Accounts_Client
                 JsonObject = null,
                 RequestType = Const.RequestTypeGet,
                 StringMessage = "GameComputer",
-                JsonSender = _sender.ToJson()
+                JsonSender = _sender.ToJson(),
+                VacBanFree = noVacBan
             };
             _connectionActive = true;
             var sendPostDataAsync = _requestSender?.SendPostDataAsync(api);
@@ -283,10 +284,15 @@ namespace Next.Accounts_Client
         {
             OkButton.Enabled = false;
             _processLauncher?.CloseProcesses(_clientSettings?.ProcessName);
-            _gameCode = _arguments != null && _arguments.Length == 2 ? _arguments[0] : "0";
-            var title = _arguments != null && _arguments.Length == 2 ? _arguments[1] : "Steam launcher";
-            this.Text = title;
-            RequestAccount();
+            var noVacBan = false;
+            if (_arguments != null)
+            {
+                _gameCode = _arguments.Length >= 1 ? _arguments[0] : "0";
+                if (_gameCode == "730") noVacBan = true;
+                var title = _arguments.Length >= 2 ? _arguments[1] : "Steam launcher";
+                this.Text = title;
+            }
+            RequestAccount(noVacBan);
         }
 
         private void CloseApplication()

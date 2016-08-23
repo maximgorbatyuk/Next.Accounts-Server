@@ -65,7 +65,8 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
                         $"{Const.PasswordColumn} TEXT," +
                         $"{Const.AvailableColumn} INTEGER," +
                         $"{Const.ComputerNameColumn} TEXT, " +
-                        $"{Const.CenterOwnerColumn} TEXT)";
+                        $"{Const.CenterOwnerColumn} TEXT, " +
+                        $"{Const.VacBannedColumn} INTEGER)";
             var result = await ExecuteNonQueryAsync(query);
             Debug.WriteIf(result > 0, "Инициирована база аккаунтов");
         }
@@ -134,7 +135,7 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
             _connection.Dispose();
         }
 
-        public async Task<Account> GetAccount(Sender sender)
+        public async Task<Account> GetAccount(Sender sender, bool noVacBan = false)
         {
             Account account = null;
             var accounts = await GetAccounts();
@@ -143,7 +144,7 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
                 _dbListener.UpdateAccountCount(0, 0);
                 return null;
             }
-
+            accounts = noVacBan ? accounts.Where(a => a.VacBanned == false).ToList() : accounts;
             //account = accounts.FirstOrDefault(a => a.Available == true);
             account = accounts.GetRandomAccount();
             if (account == null) return null;
@@ -171,7 +172,8 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
             var query = $"UPDATE {_accountTableName} " +
                         $"SET " +
                         $"{Const.AvailableColumn}={account.Available.ToInt()}, " +
-                        $"{Const.ComputerNameColumn}='{account.ComputerName}' " +
+                        $"{Const.ComputerNameColumn}='{account.ComputerName}', " +
+                        $"{Const.VacBannedColumn}={account.VacBanned.ToInt()} " +
                         $"WHERE {Const.IdColumn}={account.Id}";
             return await ExecuteNonQueryAsync(query);
         }
@@ -214,6 +216,7 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
                 bool available  = int.Parse(row[Const.AvailableColumn].ToString()) == 1;
                 var computerName = row[Const.ComputerNameColumn].ToString();
                 var owner = row[Const.CenterOwnerColumn].ToString();
+                bool vacBanned = int.Parse(row[Const.VacBannedColumn].ToString()) == 1;
                 accounts.Add(new Account
                 {
                     Id = id,
@@ -221,7 +224,8 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
                     Password = pass,
                     Available = available,
                     ComputerName = computerName,
-                    CenterOwner = owner
+                    CenterOwner = owner,
+                    VacBanned = vacBanned
                 });
             }
             _allCount = accounts.Count;
@@ -236,7 +240,13 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
         {
             if (source == null || source.Count == 0) return 0;
             var query = $"replace into {_accountTableName} " +
-                        $"({Const.IdColumn}, {Const.LoginColumn}, {Const.PasswordColumn}, {Const.AvailableColumn}, {Const.ComputerNameColumn}, '{Const.CenterOwnerColumn}') values ";
+                        $"({Const.IdColumn}, " +
+                        $"{Const.LoginColumn}, " +
+                        $"{Const.PasswordColumn}, " +
+                        $"{Const.AvailableColumn}, " +
+                        $"{Const.ComputerNameColumn}, " +
+                        $"'{Const.CenterOwnerColumn}', " +
+                        $"{Const.VacBannedColumn}) values ";
             for (int index = 0; index < source.Count; index++)
             {
                 var account = source[index];
@@ -245,7 +255,8 @@ namespace Next.Accounts_Server.Database_Namespace.Realize_Classes
                          $"'{account.Password}', " +
                          $"{account.Available.ToInt()}, " +
                          $"'{account.ComputerName}', " +
-                         $"'{account.CenterOwner}')";
+                         $"'{account.CenterOwner}', " +
+                         $"{account.VacBanned.ToInt()})";
                 _allCount++;
                 _availableCount++;
                 if (index != (source.Count - 1)) query += ", ";

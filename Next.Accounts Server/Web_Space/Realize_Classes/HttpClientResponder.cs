@@ -203,7 +203,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
             switch (type)
             {
                 case ApiRequests.GetAccount:
-                    var accountToSend = await Database.GetAccount(sender);
+                    var noVacBan = apiRequest.VacBanFree;
+                    var accountToSend = await Database.GetAccount(sender, noVacBan);
                     response.RequestType = Const.RequestTypeGet;
                     var usedCount = UsedTracker.GetUsedCount();
                     if (accountToSend == null || _settings.SetIssueLimit && usedCount >= _settings.IssueLimitValue)
