@@ -57,7 +57,7 @@ namespace Next.Accounts_Client
             else { _clientSettings = stringSettings.ParseJson<ClientSettings>(); }
 
 
-            _sender = Const.GetSender(Assembly.GetExecutingAssembly().GetName().Version.ToString());
+            _sender = Const.GetSender(version: Assembly.GetExecutingAssembly().GetName().Version.ToString());
             _logger = new DefaultLogger();
             
             _requestSender = new WebClientController(this, this, _clientSettings.IpAddress);
