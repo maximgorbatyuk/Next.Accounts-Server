@@ -45,8 +45,8 @@ namespace Next.Accounts_Client
                 if (!created)
                 {
                     IntPtr hWnd = FindWindow(null, "steam");
-                    if (IsIonoc(hWnd)) ShowWindow(hWnd, 9);
-                    else SetForegroundWindow(hWnd);
+                    //var result = ShowWindow(hWnd, 9);
+                    var result = SetForegroundWindow(hWnd);
                     return;
                 }
                 Application.Run(new Form1(args));
