@@ -37,13 +37,17 @@ namespace Next.Accounts_Client.Controllers.Realize_Classes
         private async void TimerOnTick(object sender, EventArgs eventArgs)
         {
             if (_requestSender == null || _account == null) return;
+            
             _message.JsonObject = _account.ToJson();
             await _requestSender.SendPostDataAsync(_message);
         }
 
         public void StartTimer() => _timer.Start();
 
-        public void StopTimer() =>_timer.Stop();
+        public void StopTimer()
+        {
+            _timer.Stop();
+        } 
 
         public void SetAccount(Account account)
         {

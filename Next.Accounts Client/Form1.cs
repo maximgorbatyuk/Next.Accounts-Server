@@ -114,9 +114,12 @@ namespace Next.Accounts_Client
             throw new NotImplementedException();
         }
 
-        private void button2_Click(object sender, EventArgs e) => ReleaseAccount();
+        private async void button2_Click(object sender, EventArgs e)
+        {
+            var result = await ReleaseAccount();
+        }
 
-        private async void ReleaseAccount()
+        private async Task<bool> ReleaseAccount()
         {
             var api = new ApiMessage
             {
@@ -129,7 +132,7 @@ namespace Next.Accounts_Client
             _account = null;
             _connectionActive = true;
             var result = await _requestSender.SendPostDataAsync(api);
-            
+            return result;
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -165,9 +168,14 @@ namespace Next.Accounts_Client
             Notify("Steam запущен");
         }
 
-        public void OnSteamClosed()
+        public async void OnSteamClosed()
         {
-            ReleaseAccount();
+            bool result = false;
+           
+            while (!result)
+            {
+                result = await ReleaseAccount();
+            }
             Notify("Steam закрыт");
             CloseApplication();
         }
@@ -176,7 +184,7 @@ namespace Next.Accounts_Client
         {
             _connectionActive = false;
             OkButton.Enabled = true;
-            var apiResponse = responseString.ParseJson<ApiMessage>();
+            ApiMessage apiResponse = responseString.ParseJson<ApiMessage>();
             if (apiResponse == null)
             {
                 DisplayText($"Received null apiResponse: {responseString}");
@@ -315,12 +323,15 @@ namespace Next.Accounts_Client
             //notifyIcon.Visible = false;
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             var reason = e.CloseReason;
             if (reason == CloseReason.WindowsShutDown || _badConnectionOrDenied)
             {
-                if (_account != null) ReleaseAccount();
+                if (_account != null)
+                {
+                    await ReleaseAccount();
+                }
                 _processLauncher.CloseProcesses(_clientSettings.ProcessName);
                 return;
             }

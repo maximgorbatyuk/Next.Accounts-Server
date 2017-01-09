@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Next.Accounts_Server.Application_Space;
 using Next.Accounts_Server.Extensions;
+using Next.Accounts_Server.Models;
 using Next.Accounts_Server.Web_Space.Model;
 
 namespace Next.Accounts_Server.Web_Space.Realize_Classes
@@ -36,14 +37,34 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         private string FormatUrl(string url)
         {
-            if (!url.Contains(":")) url = $"{url}:8082";
+            //if (!url.Contains(":")) url = $"{url}:8082";
             if (!url.Contains("http://")) url = $"http://{url}";
             return url;
         }
 
+        private async Task<bool> SendPostAsync(string data, string url)
+        {
+            _url = url != null ? FormatUrl(url) : _url;
+            _client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
+            try
+            {
+                var result = await _client.UploadStringTaskAsync(_url, data);
+                _responseListener.OnServerResponse(result);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _listener.OnException(ex);
+                _responseListener.OnConnectionError(ex);
+            }
+            return false;
+        }
+
         public async Task<bool> SendPostDataAsync(ApiMessage message, string url = null)
         {
-            var toSend = message.ToJson();
+            var toSend = $"json={message.ToJson()}";
+            return await SendPostAsync(toSend, url);
+            /*
             _url = url != null ? FormatUrl(url) : _url;
             _client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
             try
@@ -58,6 +79,18 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 _responseListener.OnConnectionError(ex);
             }
             return false;
+            */
+        }
+
+        public Task<bool> SendAccountRequestAsync(bool withoutVacBan = false)
+        {
+            var data = $"action=GetAccount&withoutVacBan={withoutVacBan}";
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> SendAccountReleaseAsync(Account account)
+        {
+            throw new NotImplementedException();
         }
     }
 }
