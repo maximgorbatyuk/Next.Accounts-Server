@@ -12,6 +12,8 @@ namespace Next.Accounts_Server.Models
 
         public string AppVersion { get; set; } = "0.0.0.0";
 
+        public string CenterName { get; set; } = null;
+
         public override string ToString()
         {
             return $"{Name} (type {AppType}, ip {IpAddress}, version {AppVersion})";

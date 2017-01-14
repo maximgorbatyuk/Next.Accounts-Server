@@ -18,7 +18,7 @@ namespace Next.Accounts_Client.Controllers.Realize_Classes
 
         private ApiMessage _message;
 
-        public DefaultUsingTracker(IRequestSender requestSender, Sender me, int min = 1)
+        public DefaultUsingTracker(IRequestSender requestSender, Sender me, int min = 5)
         {
             _requestSender = requestSender;
             _account = null;

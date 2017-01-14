@@ -14,6 +14,7 @@ namespace Next.Accounts_Server.Extensions
             }
             catch (JsonException ex)
             {
+                ex = ex;
                 // _displayer?.OnEvent(ex.Message);
                 // _outputController?.LogError(ex.Message);
             }

@@ -16,11 +16,13 @@ namespace Next.Accounts_Client.Application_Space
 
         public string ReleasedMessage { get; set; } = "Аккунт освобожден";
 
-        public string IpAddress { get; set; } = "127.0.0.1";
+        public string IpAddress { get; set; } = "http://accounts.next.kz/rest/distribution.php";
 
         public string ProcessName { get; set; } = "steam";
 
         public string SteamDirectory { get; set; } = "C:\\Program Files (x86)\\Steam\\steam.exe";
+
+        public string CenterName { get; set; } = "test";
 
         public List<string> VacBanGames { get; set; } = new List<string> ();
     }

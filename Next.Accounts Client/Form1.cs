@@ -56,8 +56,8 @@ namespace Next.Accounts_Client
             }
             else { _clientSettings = stringSettings.ParseJson<ClientSettings>(); }
 
-
-            _sender = Const.GetSender(version: Assembly.GetExecutingAssembly().GetName().Version.ToString());
+            var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            _sender = Const.GetSender(version: version, centerName: _clientSettings.CenterName);
             _logger = new DefaultLogger();
             
             _requestSender = new WebClientController(this, this, _clientSettings.IpAddress);
@@ -69,7 +69,7 @@ namespace Next.Accounts_Client
                 TrackerListener = this
             };
             _usingTracker = new DefaultUsingTracker(_requestSender, _sender);
-            var version = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
+            version = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
             VersionLabel.Text = version;
         }
 
@@ -121,6 +121,7 @@ namespace Next.Accounts_Client
 
         private async Task<bool> ReleaseAccount()
         {
+            _account.ComputerName = "";
             var api = new ApiMessage
             {
                 Code = 200,
@@ -214,8 +215,16 @@ namespace Next.Accounts_Client
                 case ApiRequests.GetAccount:
                     jsonObject = apiResponse.JsonObject;
                     account = jsonObject?.ParseJson<Account>();
+
+                    if (account == null)
+                    {
+                        displayMessage = "null account data";
+                        break;
+                    }
                     _account = account;
-                    displayMessage = account != null ? $"Account {_account} received. Sender {sender}" : $"null account data";
+                    _account.CenterOwner = _clientSettings.CenterName;
+                    _account.ComputerName = _sender.Name;
+                    displayMessage = $"Account {_account} received. Sender {sender}";
                     DisplayInMainlabel(_clientSettings.OkayMessage);
                     _usingTracker.SetAccount(_account);
                     // Launch steam if an account has been received

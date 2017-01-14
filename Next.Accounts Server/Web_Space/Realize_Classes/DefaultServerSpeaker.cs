@@ -31,6 +31,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
             _requestSender = requestSender;
             _listener = listener;
             _centersDictionary = new Dictionary<string, bool>();
+            if (_settings.AddressesList == null) return;
             foreach (var address in _settings.AddressesList)
             {
                 try
