@@ -29,7 +29,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         public bool GetListenState() => _server?.IsListening ?? false;
 
-        public void Start()
+        public bool Start()
         {
             Close();
             //if (_server != null && _server.IsListening) Close();
@@ -55,7 +55,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                         $"netsh http add urlacl url={_url} user={userdomain}\\{username} listen=yes");
                 }
                 _eventListener.OnException(ex);
-                return;
+                return false;
             }
 
 
@@ -67,6 +67,7 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                 thread.Start();
             }
             _eventListener.OnEvent("Listenning started");
+            return true;
         }
 
         public void Close()

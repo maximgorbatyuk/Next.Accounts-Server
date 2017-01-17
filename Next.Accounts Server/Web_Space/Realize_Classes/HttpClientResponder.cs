@@ -145,8 +145,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
                     }
                     else
                     {
-                        
-                        var apiMessage = request.PostData.ParseJson<ApiMessage>();
+                        var postData = request.PostData.Replace("json=", "");
+                        var apiMessage = postData.ParseJson<ApiMessage>();
                         var requestType = Const.GetRequestType(apiMessage);
                         var sender = apiMessage.JsonSender.ParseJson<Sender>();
                         ApiMessage response = null;
@@ -188,7 +188,8 @@ namespace Next.Accounts_Server.Web_Space.Realize_Classes
 
         private async Task<ApiMessage> CreateHttpResponseAsync(ApiRequests type, HttpRequest request)
         {
-            var apiRequest = request.PostData.ParseJson<ApiMessage>();
+            var postData = request.PostData.Replace("json=", "");
+            var apiRequest = postData.ParseJson<ApiMessage>();
             var response = new ApiMessage
             {
                 Code = 200,

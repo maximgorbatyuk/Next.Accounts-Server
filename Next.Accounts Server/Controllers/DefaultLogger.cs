@@ -33,7 +33,7 @@ namespace Next.Accounts_Server.Controllers
 
         public void LogAccountUsement(string message)
         {
-            UsementLogName = $"usement-{DateTime.Now.ToString("dd-MM-yyyy")}.txt";
+            UsementLogName = $"usement-{DateTime.Now:dd-MM-yyyy}.txt";
             var filename = $"{_logPath}\\{UsementLogName}";
             WriteToFile(filename, message);
         }

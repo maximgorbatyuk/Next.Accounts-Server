@@ -158,10 +158,10 @@ namespace Next.Accounts_Server
                 while (!_server.GetListenState())
                 {
                     await Task.Delay(100);
-                    _server.Start();
+                    var starResult = _server.Start();
+                    if (starResult == false) return;
                 }
-                    await StartListenButton.Dispatcher.InvokeAsync(() => StartListenButton.Header = "Stop listenning");
-                
+                await StartListenButton.Dispatcher.InvokeAsync(() => StartListenButton.Header = "Stop listenning");
                 await ServerMenuItem.Dispatcher.InvokeAsync(() => 
                     ServerMenuItem.Background = new SolidColorBrush(Color.FromArgb(255, 158, 227, 174)));
                 
